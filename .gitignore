@@ -1,0 +1,34 @@
+# データ実体は git 管理対象外 (大量生成されるため)
+# ディレクトリ構造は .gitkeep で保持する
+data/schedule/*
+!data/schedule/.gitkeep
+data/shutsuba/*
+!data/shutsuba/.gitkeep
+data/odds_snapshots/*
+!data/odds_snapshots/.gitkeep
+data/results/*
+!data/results/.gitkeep
+logs/*
+!logs/.gitkeep
+
+# Jupyter / Python キャッシュ
+.ipynb_checkpoints/
+__pycache__/
+*.pyc
+*.pyo
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# 一時スクリプト (scripts/old/ 以下)
+scripts/old/
+
+# Excel ロックファイル
+~$*
+
+# 環境変数 / 認証情報
+.env
+credentials.json
