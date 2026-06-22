@@ -69,7 +69,7 @@ for _d in [_SCHEDULE_DIR, _SHUTSUBA_DIR, _SNAPSHOT_DIR, _RESULT_DIR, _LOG_DIR]:
 # ────────────────────────────────────────────────────────────
 SNAPSHOT_CONFIG = [
     (60, 2.0), (30, 1.0), (15, 0.7), (10, 0.7),
-    (5, 0.5),  (3, 0.3),  (1, 0.3),
+    (5, 0.5),  (3, 0.3),  (2, 0.3),  (1, 0.3),
 ]
 CHECK_INTERVAL_SEC = 5     # tick() 後の待機 (Selenium が重いので短め)
 REQUEST_DELAY_SEC  = 3
