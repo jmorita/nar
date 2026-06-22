@@ -1,0 +1,1843 @@
+@charset "UTF-8";
+#cboxLoadedContent {
+  padding: 0;
+  margin-top: 0 !important;
+}
+
+#delay_umai_baken {
+  background: #fff !important;
+  margin-top: 0 !important;
+  font-size: 18px;
+}
+
+#delay_umai_baken .Title_Sec {
+  margin-bottom: 13px;
+  margin-top: 21px;
+}
+
+.UmaiTopAbout {
+  text-align: center;
+  padding-top: 8px;
+  margin-bottom: 30px;
+}
+
+.UmaiTopAbout a:hover {
+  opacity: .5;
+}
+
+.UmaibakenLinkArea {
+  margin-top: 20px;
+  border-radius: 3px;
+  margin: 0;
+  border: 1px solid #B8B5AB;
+  position: relative;
+}
+
+.UmaibakenLinkArea.ProYoso a {
+  display: block;
+  padding: 5px 10px 5px 12px;
+  border: none;
+}
+
+.UmaibakenLinkArea.ProYoso .LinkTable {
+  display: table;
+  width: 100%;
+  min-height: 36px;
+}
+
+.UmaibakenLinkArea.ProYoso .LinkTable .Umai_MyPoint_text3 {
+  color: #e5a700;
+  font-size: 16px;
+}
+
+.UmaibakenLinkArea.ProYoso .LinkTable .Umai_MyPoint_text3 .point {
+  font-weight: bold;
+  font-size: 128.57%;
+}
+
+/*
+
+.UmaibakenLinkArea .MyPonitBox_Item01 .YosoCount {
+    padding: 0;
+}
+*/
+/*-- 以下共通　残りポイント表記　--*/
+.limite_point {
+  font-size: 12px;
+  padding: 3px 0px;
+  background-color: #ffffff;
+  margin-top: 10px;
+  border-radius: 9px;
+}
+
+.limite_point.bg_white {
+  margin: 5px;
+  background-color: #ececec;
+}
+
+.limite_point {
+  font-size: 12px;
+  text-align: center;
+  color: #666666;
+}
+
+.limite_point span.alert_point {
+  padding-left: 16px;
+  font-weight: 700;
+}
+
+.limite_point.patternnear {
+  color: #b53e36;
+  border: 1px solid #b53e36;
+  background-color: #ffffff;
+}
+
+.limite_point.patternnear p {
+  color: #b83f36;
+}
+
+/*-- 的中速報 --*/
+.GensenYosoHitTickerBox {
+  border: 2px solid #d5524f;
+  position: relative;
+  height: 46px;
+  overflow: hidden;
+  -moz-border-radius: 4px;
+  -webkit-border-radius: 4px;
+  border-radius: 4px;
+  padding-left: 50px;
+  background: #fff;
+  font-size: 73.8%;
+  margin: 10px 8px;
+}
+
+.GensenYosoHitTickerBox .HitNewsTitle {
+  width: 50px;
+  height: 42px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  background: #d5524f;
+  color: #fff;
+  font-weight: bold;
+  z-index: 10;
+  text-align: left;
+  overflow: hidden;
+  padding: 7px 0 0 4px;
+}
+
+.GensenYosoHitTickerBox .HitNewsTitle span {
+  display: inline-block;
+  line-height: 1.2;
+}
+
+.GensenYosoHitTickerBox .HitNewsTitle span + span {
+  padding-left: 7px;
+}
+
+.GensenYosoHitTickerBox .HitNewsTitle:after {
+  content: '';
+  position: absolute;
+  top: -4px;
+  right: -11px;
+  display: block;
+  width: 16px;
+  height: 50px;
+  background: #fff;
+  -webkit-transform-origin: left center;
+  -ms-transform-origin: left center;
+  transform-origin: left center;
+  -webkit-transform: rotate(-12deg);
+  -ms-transform: rotate(-12deg);
+  transform: rotate(-12deg);
+  margin-right: 2px;
+  z-index: -1;
+}
+
+.GensenYosoHitTickerBox .tickercontainer {
+  overflow: hidden;
+  width: 100%;
+  height: 42px;
+  position: relative;
+}
+
+.GensenYosoHitTickerBox .tickercontainer:before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 28px;
+  height: 50px;
+  background: #d5524f;
+  z-index: 10;
+}
+
+.GensenYosoHitTickerBox .tickercontainer:after {
+  content: '';
+  position: absolute;
+  top: 15px;
+  right: 4px;
+  display: inline-block;
+  width: 0;
+  height: 0;
+  border: 5px solid transparent;
+  border-left: 6px solid #fff;
+  z-index: 10;
+}
+
+.GensenYosoHitTickerBox .tickercontainer .mask {
+  width: 90%;
+  position: relative;
+}
+
+.GensenYosoHitTickerBox ul#NewsTickerList {
+  overflow: hidden;
+  position: relative;
+}
+
+.GensenYosoHitTickerBox ul#NewsTickerList li {
+  float: left;
+  overflow: hidden;
+  line-height: 43px;
+  color: #00f;
+  white-space: nowrap;
+  padding-right: 8em;
+}
+
+.GensenYosoHitTickerBox a ul#NewsTickerList li {
+  color: #333;
+}
+
+.GensenYosoHitTickerBox a strong {
+  color: #da4343;
+}
+
+/*-- 予想リスト --*/
+.GensenYosoList {
+  padding: 0 8px 16px;
+}
+
+.GensenYosoList li.GensenYosoBox {
+  border: 1px solid #c4c1b8;
+  background: #fff;
+  margin-bottom: 8px;
+  padding: 1px;
+  display: -webkit-flex;
+  display: -moz-flex;
+  display: -ms-flex;
+  display: -o-flex;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-flex-wrap: wrap;
+  -ms-flex-wrap: wrap;
+  flex-wrap: wrap;
+}
+
+li.GensenYosoBox .Profile {
+  width: 100%;
+  padding: 7px 16px;
+  background: #efefd9;
+}
+
+li.GensenYosoBox .Profile p.Name {
+  font-size: 88.9%;
+  font-weight: bold;
+}
+
+li.GensenYosoBox .YosokaBox {
+  background: #f5f4f1;
+}
+
+li.GensenYosoBox .YosokaBox .YosokaImage {
+  margin: 10px 12px;
+}
+
+li.GensenYosoBox .YosokaBox .YosokaImage img {
+  -moz-border-radius: 6px;
+  -webkit-border-radius: 6px;
+  border-radius: 6px;
+  width: 110px;
+  -webkit-box-shadow: 0 1px 5px 2px rgba(146, 151, 165, 0.4);
+  box-shadow: 0 1px 5px 2px rgba(146, 151, 165, 0.4);
+}
+
+li.GensenYosoBox .YosokaBox .YosokaData {
+  padding: 0 0 8px;
+}
+
+li.GensenYosoBox .YosokaBox .YosokaDataInner {
+  border-radius: 3px;
+  background: #e99f36;
+  font-size: 66.7%;
+  font-weight: bold;
+  padding: 3px;
+  margin: 0 10px;
+}
+
+li.GensenYosoBox .YosokaBox .YosokaData .YosokaDataTitle {
+  color: #fff;
+  font-weight: bold;
+  text-align: center;
+  padding: 3px 0;
+}
+
+li.GensenYosoBox .YosokaBox .YosokaData dl {
+  display: -webkit-flex;
+  display: -moz-flex;
+  display: -ms-flex;
+  display: -o-flex;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  color: #333;
+  font-weight: bold;
+  border-radius: 3px 3px 0 0;
+  background: #fff;
+  padding: 3px;
+}
+
+li.GensenYosoBox .YosokaBox .YosokaData dl + dl {
+  border-top: 1px dotted #333;
+  border-radius: 0 0 3px 3px;
+}
+
+li.GensenYosoBox .YosokaBox .YosokaData dl dt {
+  padding: 5px 0;
+  text-align: center;
+}
+
+li.GensenYosoBox .YosokaBox .YosokaData dl dd {
+  -webkit-box-flex: 1;
+  -ms-flex: 1;
+  flex: 1;
+  padding: 5px 4px;
+  border-radius: 3px;
+  background: #fff;
+  text-align: right;
+}
+
+.YosoDataBox {
+  -webkit-box-flex: 1;
+  -ms-flex: 1;
+  flex: 1;
+  overflow: hidden;
+  display: -webkit-flex;
+  display: -moz-flex;
+  display: -ms-flex;
+  display: -o-flex;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-flex-direction: column;
+  -ms-flex-direction: column;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+  flex-direction: column;
+}
+
+.YosoDataBox .YosoComment {
+  padding: 9px 20px;
+  font-size: 77.8%;
+  border-bottom: 1px dashed #000;
+}
+
+.YosoDataBox .YosoComment > p {
+  width: 100%;
+  overflow: hidden;
+  -o-text-overflow: ellipsis;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.2;
+}
+
+.YosoDataBox .YosoData {
+  padding: 12px 20px;
+  position: relative;
+  display: -webkit-flex;
+  display: -moz-flex;
+  display: -ms-flex;
+  display: -o-flex;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-justify-content: center;
+  -ms-justify-content: center;
+  -webkit-box-pack: center;
+  -ms-flex-pack: center;
+  justify-content: center;
+  -webkit-align-items: center;
+  -ms-align-items: center;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  -webkit-box-flex: 1;
+  -ms-flex: 1;
+  flex: 1;
+}
+
+.YosoDataBox .YosoData img.ImgSampleShirushi {
+  width: 140px;
+}
+
+.YosoDataBox .YosoData .ShirushiBox {
+  position: relative;
+  min-width: 140px;
+  overflow: hidden;
+  padding: 6px 0;
+}
+
+.YosoDataBox .YosoData .ShirushiBox li {
+  position: relative;
+  font-size: 66.7%;
+  line-height: 14px;
+  font-weight: bold;
+  padding-left: 20px;
+  margin-bottom: 7px;
+}
+
+.YosoDataBox .YosoData .ShirushiBox li:last-child {
+  margin: 0;
+}
+
+.YosoDataBox .YosoData .ShirushiBox span.Icon_Shirushi {
+  display: inline-block;
+  text-indent: -9633px;
+  vertical-align: middle;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+/*-- 印アイコン --*/
+.YosoDataBox .YosoData .ShirushiBox span.Icon_Shirushi {
+  display: block;
+  background-image: url("../img/icon/icon_yoso_shirushi.png");
+  background-repeat: no-repeat;
+  -moz-background-size: 67px 185px;
+  -webkit-background-size: 67px 185px;
+  -o-background-size: 67px 185px;
+  -ms-background-size: 67px 185px;
+  background-size: 67px 185px;
+  width: 14px;
+  height: 14px;
+  margin: auto;
+}
+
+.YosoDataBox .YosoData .ShirushiBox span.Icon_Honmei {
+  background-position: 0 0;
+}
+
+.YosoDataBox .YosoData .ShirushiBox span.Icon_Taikou {
+  background-position: 0 -14px;
+}
+
+.YosoDataBox .YosoData .ShirushiBox span.Icon_Kurosan {
+  background-position: 0 -29px;
+}
+
+.YosoDataBox .YosoData .ShirushiBox span.Icon_Osae {
+  background-position: 0 -43px;
+}
+
+.YosoDataBox .YosoData .ShirushiBox span.Icon_Hoshi {
+  background-position: 0 -58px;
+}
+
+.YosoDataBox .YosoData .ShirushiBox span.Icon_Chuui {
+  background-position: 0 -113px;
+}
+
+.YosoDataBox .YosoData .ValueCircle {
+  background-image: url("../img/race/bg_ValueCircle.png");
+  background-position: 0 0;
+  background-repeat: no-repeat;
+  -webkit-background-size: 74px 74px;
+  -moz-background-size: 74px 74px;
+  -ms-background-size: 74px 74px;
+  background-size: 74px 74px;
+  width: 74px;
+  height: 74px;
+  position: absolute;
+  right: 5px;
+  bottom: 4px;
+  z-index: 10;
+}
+
+.YosoDataBox .YosoData .ValueCircle p {
+  position: relative;
+  top: 50%;
+  -webkit-transform: translateY(-50%);
+  -ms-transform: translateY(-50%);
+  transform: translateY(-50%);
+  text-align: center;
+  font-weight: bold;
+  color: #d5524f;
+}
+
+.YosoDataBox .YosoData .ValueCircle p.TxtType01 {
+  font-size: 88.9%;
+  line-height: 1.2;
+}
+
+.YosoDataBox .YosoData .ValueCircle p.TxtType02 {
+  font-size: 66.7%;
+  line-height: 1.47;
+}
+
+li.GensenYosoBox .BtnArea {
+  background: #fff;
+  text-align: center;
+  padding: 0 14px 15px;
+  margin-top: auto;
+}
+
+/*-- もっと見る --*/
+.GensenYosoList .BtnArea {
+  text-align: center;
+}
+
+.GensenYosoList .BtnArea a.YosoLinkBtn {
+  display: block;
+  text-align: center;
+  color: #333;
+  padding: 15px 14px;
+  -webkit-user-select: none;
+  border-radius: 4px;
+  -webkit-border-radius: 4px;
+  -moz-border-radius: 4px;
+  background: #ecebeb;
+  box-shadow: 0 0 0 1px #dadada !important;
+  -moz-box-shadow: 0 0 0 1px #dadada !important;
+  -webkit-box-shadow: 0 0 0 1px #dadada !important;
+  font-size: 94%;
+}
+
+/*-- 的中パターン --*/
+.GensenYosoList li.GensenYosoBox.Hit {
+  border: 2px solid #df7878;
+  padding: 0;
+}
+
+li.GensenYosoBox.Hit .Profile {
+  background: #fdd5d5;
+}
+
+li.GensenYosoBox.Hit .YosokaBox {
+  background: #ffefef;
+}
+
+li.GensenYosoBox.Hit .YosoDataBox .YosoData:after {
+  content: '';
+  display: inline-block;
+  background: url("../img/race/img_hit_stamp.png") no-repeat;
+  -webkit-background-size: 76px 77px;
+  -moz-background-size: 76px 77px;
+  -ms-background-size: 76px 77px;
+  -o-background-size: 76px 77px;
+  background-size: 76px 77px;
+  width: 76px;
+  height: 77px;
+  position: absolute;
+  right: 5px;
+  bottom: 4px;
+}
+
+/* state_btn */
+.ProYosoka_Box .BtnArea {
+  margin-top: 8px;
+}
+
+.ProYosoka_Box .BtnArea .StateBtn {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  padding: 17px 0 16px;
+  width: 100%;
+  font-size: 0.9375rem;
+  font-weight: bold;
+  background-color: #fff;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  outline: none;
+  background: inherit;
+  -webkit-box-shadow: none;
+  box-shadow: none;
+  max-width: none;
+}
+
+.ProYosoka_Box .BtnArea .StateBtn.State1 {
+  color: #666;
+  border-color: #888;
+}
+
+.ProYosoka_Box .BtnArea .StateBtn.State2 {
+  color: #3251bc;
+  border-color: #3251bc;
+}
+
+.ProYosoka_Box .BtnArea .StateBtn.Lock .Point {
+  position: relative;
+  display: inline-block;
+  padding-left: 26px;
+}
+
+.ProYosoka_Box .BtnArea .StateBtn.Lock .Point::before {
+  content: "";
+  position: absolute;
+  top: -2px;
+  left: 0;
+  display: block;
+  width: 20px;
+  height: 20px;
+  background-image: url(../img/race/icon_key_nk01.png);
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-position: center center;
+}
+
+.StateBtn.State1 .Point, .StateBtn.State2 .Point, .StateBtn.State4 .Point {
+  font-size: 0.9375rem;
+}
+
+.StateBtn.State1 .Txt, .StateBtn.State2 .Txt, .StateBtn.State4 .Txt {
+  font-size: 0.9375rem;
+}
+
+/* クーポン */
+.List_Coupon p{
+  font-weight: bold;
+  color: #B7443E;
+  margin: 10px 12px;
+  font-size: 77.7778%;
+}
+.ProYosoka_List_Wrap .List_Coupon p{
+  font-size: 66.6667%;
+    text-align: center;
+    line-height: 1.7;
+}
+.List_Coupon p svg{
+  position: relative;
+    top: 2px;
+  fill: #B7443E;
+  margin-right: 6px;
+}
+.List_Coupon p .price{
+  font-weight: normal;
+  color: #757575;
+  margin-left: 7px;
+}
+.List_Coupon p .price .line-through{
+  text-decoration: line-through;
+}
+.List_Coupon p .price .color{
+  color: #B7443E;  
+}
+.List_Coupon p .price .num{
+  font-weight: bold;
+}
+
+
+/*=== 無料 ===*/
+.StateBtn.StateFree .FreeFlag {
+  position: relative;
+  display: inline-block;
+  background: #d1423f;
+  color: #fff;
+  font-size: 66.7%;
+  margin: -3px 14px -3px 0;
+  font-weight: bold;
+  -moz-border-radius: 2px;
+  -webkit-border-radius: 2px;
+  border-radius: 2px;
+  padding: 6px 7px;
+  top: -3px;
+}
+
+.StateBtn.StateFree .FreeFlag:after {
+  content: "";
+  display: inline-block;
+  width: 0;
+  height: 0;
+  border: 4px solid transparent;
+  border-left: 6px solid #d1423f;
+  position: absolute;
+  top: 7px;
+  right: -10px;
+}
+
+/*-- 取り消し・除外 --*/
+span.Jyogai {
+  display: block;
+  color: #c00;
+  font-size: 15px;
+  text-align: center;
+  padding: 7px 0 0;
+}
+
+/*==============================================
+厳選予想リスト改 2019.06.05
+==============================================*/
+#gensenslider {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+}
+
+.ProYosoka_List_Wrap ul {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+}
+
+.ProYosoka_List_Wrap .slick-list {
+  padding: 10px 0;
+}
+
+.ProYosoka_List_Wrap li + li {
+  margin-left: 10px;
+}
+
+.ProYosoka_Box .Yosoka {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+}
+
+.ProYosoka_Box .YosokaImage {
+  display: table-cell;
+  width: 65px;
+  vertical-align: top;
+  overflow: hidden;
+  border-radius: 6px;
+}
+
+.ProYosoka_Box .Profile {
+  display: table-cell;
+  width: 100%;
+  padding-left: 16px;
+  vertical-align: top;
+}
+
+li.GensenYosoBox.Hit .Profile {
+  display: table-cell;
+  width: 100%;
+  padding-left: 16px;
+  vertical-align: top;
+  background-color: transparent;
+}
+
+.ProYosoka_Box .YosokaImage img {
+  width: 100%;
+  border-radius: 6px;
+}
+
+.ProYosoka_Box .Profile .Name {
+  margin-bottom: 6px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  -o-text-overflow: ellipsis;
+  text-overflow: ellipsis;
+  font-size: 18px;
+}
+
+.ProYosoka_Box .Profile .Categories {
+  display: inline-block;
+  margin-bottom: 5px;
+  padding: 3px 8px 2px;
+  color: #fff;
+  font-size: 0.75rem;
+  background-color: #9e9e9e;
+  border-radius: 9px;
+}
+
+.ProYosoka_Box .Profile .CatchPhrase {
+  color: #777;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  white-space: nowrap;
+  overflow: hidden;
+  -o-text-overflow: ellipsis;
+  text-overflow: ellipsis;
+}
+
+.ProYosoka_Box .YosokaData {
+  display: table;
+  margin: 20px auto 16px;
+  text-align: center;
+}
+
+.ProYosoka_Box .Comment {
+  padding: 8px 16px;
+  background-color: #f4f4f4;
+  border-radius: 6px;
+}
+
+.ProYosoka_Box .Comment > .Txt {
+  display: -webkit-box;
+  height: 2.8em;
+  color: #777;
+  font-size: 0.9375rem;
+  line-height: 1.4;
+  overflow: hidden;
+  -o-text-overflow: ellipsis;
+  text-overflow: ellipsis;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.ProYosoka_Box {
+  position: relative;
+  width: 292px;
+  height: 100%;
+  padding: 10px;
+  border: 1px solid #cacaca;
+  border-radius: 6px;
+  padding: 9px 10px 9px;
+  background-color: #ffffff;
+  font-family: "ヒラギノ角ゴ ProN W3", "Hiragino Kaku Gothic ProN", arial, "Meiryo", "メイリオ", sans-serif;
+}
+
+.GensenYosoBox.Hit .Profile {
+  background-color: transparent;
+}
+
+.Hit .ProYosoka_Box {
+  padding: 9px 10px;
+  border: 2px solid #ef5350;
+}
+
+.GensenYosoList li {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  width: 292px;
+  -ms-flex-wrap: 292px;
+  flex-wrap: 292px;
+  white-space: normal;
+}
+
+.GensenYosoList {
+  overflow-y: hidden;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  overflow-scrolling: touch;
+  white-space: nowrap;
+  margin-top: -5px;
+  padding: 5px 10px 0;
+  margin-bottom: 10px;
+}
+
+.GensenYosoList .BtnArea {
+  margin-top: 8px;
+}
+
+.StateBtn.State1 {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  padding: 17px 0 16px;
+  width: 100%;
+  font-size: 0.9375rem;
+  font-weight: bold;
+  background: #fff;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  outline: none;
+  max-width: 100%;
+  -webkit-box-shadow: none;
+  box-shadow: none;
+}
+
+.GensenYosoList .BtnArea .StateBtn.Stateyoso {
+  color: #666;
+  border-color: #888;
+  margin-top: 0px;
+}
+
+.GensenYosoBox .BtnArea {
+  padding: 0px;
+}
+
+.GensenYosoList .State1 {
+  color: #3251bc;
+  border-color: #3251bc;
+}
+
+.GensenYosoList .YosokaData dd {
+  display: table-cell;
+  padding-left: 10px;
+  color: #c53131;
+  font-size: 1.5625rem;
+  font-weight: 700;
+  vertical-align: middle;
+}
+
+.GensenYosoList.YosokaData dt {
+  display: table-cell;
+  padding-top: 4px;
+  color: #777;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  vertical-align: middle;
+}
+
+.GensenYosoList .Profile .Name a {
+  display: inline-block;
+  font-size: 1.1875rem;
+}
+
+.Hit .ProYosoka_Box::after {
+  content: "";
+  position: absolute;
+  top: -1px;
+  right: -5px;
+  display: block;
+  width: 76px;
+  height: 76px;
+  background-image: url(../img/race/img_hit_stamp.png);
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-position: center 0;
+}
+
+.GensenYosoList li + li {
+  margin-left: 10px;
+}
+
+.GensenYosoList li.GensenYosoBox.Hit {
+  background: transparent;
+  border: none;
+}
+
+.ValueCircle p {
+  position: relative;
+  top: 50%;
+  -webkit-transform: translateY(-50%);
+  -ms-transform: translateY(-50%);
+  transform: translateY(-50%);
+  text-align: center;
+  font-weight: bold;
+  color: #d5524f;
+}
+
+.ValueCircle p.TxtType01 {
+  font-size: 88.9%;
+  line-height: 1.2;
+}
+
+.ValueCircle p.TxtType02 {
+  font-size: 66.7%;
+  line-height: 1.47;
+}
+
+.ValueCircle {
+  background-image: url(../img/race/bg_ValueCircle.png);
+  background-position: 0 0;
+  background-repeat: no-repeat;
+  -webkit-background-size: 74px 74px;
+  -moz-background-size: 74px 74px;
+  -ms-background-size: 74px 74px;
+  background-size: 74px 74px;
+  width: 74px;
+  height: 74px;
+  position: absolute;
+  right: -5px;
+  top: -4px;
+  z-index: 10;
+}
+
+.GensenYosoList li:last-child {
+  width: 302px;
+  padding-right: 10px;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  width: 292px;
+  -ms-flex-wrap: 292px;
+  flex-wrap: 292px;
+  white-space: normal;
+}
+
+.ProYosoka_List_Wrap li {
+  border: none;
+  background-color: transparent;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  width: 292px;
+  -ms-flex-wrap: 292px;
+  flex-wrap: 292px;
+  white-space: normal;
+}
+
+.ProYosoka_LastBox {
+  display: table;
+  width: 292px;
+  background-color: #ffffff;
+  border-radius: 6px;
+  border: 1px solid #cacaca;
+  height: 100%;
+}
+
+.ProYosoka_LastBox p {
+  color: #888;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  line-height: 2;
+  text-align: center;
+  display: table-cell;
+  vertical-align: middle;
+  height: 100%;
+}
+
+li.GensenYosoBox .BtnArea {
+  padding: 0px;
+  margin-top: 8px;
+}
+
+.ProYosoka_Box .YosokaData dt {
+  display: table-cell;
+  padding-top: 4px;
+  color: #777;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  vertical-align: middle;
+}
+
+.ProYosoka_Box .YosokaData dd {
+  display: table-cell;
+  padding-left: 10px;
+  color: #c53131;
+  font-size: 1.5625rem;
+  font-weight: 700;
+  vertical-align: middle;
+}
+
+li.GensenYosoBox .Profile {
+  background: transparent;
+}
+
+.GensenYosoList li.GensenYosoBox.Hit {
+  border-radius: 6px;
+}
+
+.GensenYosoList li.GensenYosoBox {
+  height: 100%;
+  border-radius: 6px;
+}
+
+.ProYosoka_Box .Comment > .Txt {
+  display: -webkit-box;
+  height: 2.8em;
+  color: #777;
+  font-size: 0.9375rem;
+  line-height: 1.4;
+  overflow: hidden;
+  -o-text-overflow: ellipsis;
+  text-overflow: ellipsis;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.GensenYosoList li.GensenYosoBox {
+  display: -webkit-box;
+  display: -moz-flex;
+  display: -ms-flex;
+  display: -o-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-flex-wrap: wrap;
+  -ms-flex-wrap: wrap;
+  flex-wrap: wrap;
+}
+
+.ProYosoka_Box .BtnArea .StateBtn.Lock .Point::before {
+  content: "";
+  position: absolute;
+  top: 5px;
+  left: 0;
+  display: block;
+  width: 20px;
+  height: 20px;
+  background-image: url(../img/race/icon_key_nk01.png);
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-position: center center;
+}
+
+.ProYosoka_Box .BtnArea .StateBtn.Lock .Point::before {
+  content: "";
+  position: absolute;
+  top: 5px;
+  left: 0;
+  display: block;
+  width: 20px;
+  height: 20px;
+  background-image: url(../img/race/icon_key_nk01.png);
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-position: center center;
+}
+
+.StateBtn.StateFree .FreeFlag {
+  position: relative;
+  display: inline-block;
+  background: #3251bc;
+  color: #fff;
+  font-size: 66.7%;
+  margin: -6px 14px -6px 0;
+  font-weight: bold;
+  -moz-border-radius: 2px;
+  -webkit-border-radius: 2px;
+  border-radius: 2px;
+  padding: 6px 7px;
+  top: -3px;
+}
+
+.StateBtn.StateFree .FreeFlag:after {
+  content: "";
+  display: inline-block;
+  width: 0;
+  height: 0;
+  border: 4px solid transparent;
+  border-left: 6px solid #3251bc;
+  position: absolute;
+  top: 7px;
+  right: -10px;
+}
+
+.GensenYosoList .BtnArea .StateBtn {
+  position: relative;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  padding: 17px 0 16px;
+  width: 100%;
+  font-size: 0.9375rem;
+  font-weight: bold;
+  background: #fff;
+  border: 1px solid #3251bc;
+  border-radius: 7px;
+  outline: none;
+  max-width: 100%;
+  -webkit-box-shadow: none;
+  box-shadow: none;
+  color: #3251bc;
+}
+
+#goods_view {
+  margin-top: 10px;
+}
+
+.GensenYoso.result li.GensenYosoBox {
+  width: 100%;
+}
+
+.GensenYoso.result .ProYosoka_Box {
+  width: 100%;
+}
+
+.GensenYoso.result .GensenYosoList .BtnArea .StateBtn.Stateyoso {
+  border: 1px solid #3251bc;
+  color: #3251bc;
+}
+
+.GensenYoso.result .YosoComment {
+  border-bottom: none;
+  border-radius: 6px;
+  background-color: #f3f3f3;
+  padding: 8px 15px;
+}
+
+.GensenYoso.result .YosoComment > p {
+  font-size: 12px;
+  color: #777777;
+}
+
+.GensenYoso.result .GensenYosoList li + li {
+  margin-left: 0px;
+}
+
+.GensenYoso.result .ProYosoka_Box table {
+  border: 1px solid #dadada;
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.GensenYoso.result .ProYosoka_Box table th {
+  border-right: 1px solid #dadada;
+  border-bottom: 1px solid #dadada;
+  background-color: #eaeaea;
+  text-align: center;
+  font-weight: normal;
+  padding: 8px 0px;
+  font-size: 11px;
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+  width: 34.6%;
+}
+
+.GensenYoso.result .ProYosoka_Box table td {
+  border-bottom: 1px solid #dadada;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: #666666;
+}
+
+.GensenYoso.result .YosoDataBox .YosoData .ShirushiBox {
+  padding: 20px 0px;
+}
+
+.GensenYoso.result .Hit .ProYosoka_Box::after {
+  content: none;
+}
+
+.GensenYoso.result .YosoDataBox .YosoData .ShirushiBox li {
+  position: relative;
+  font-size: 14px;
+  line-height: 14px;
+  font-weight: normal;
+  padding-left: 20px;
+  margin-bottom: 7px;
+  color: #666666;
+  width: auto;
+}
+
+.StateBtn.State1 .Point, .StateBtn.State2 .Point, .StateBtn.State4 .Point {
+  font-size: 0.9375rem;
+}
+
+.StateBtn.State1 .Txt, .StateBtn.State2 .Txt, .StateBtn.State4 .Txt {
+  font-size: 0.9375rem;
+}
+
+.StateBtn.State2 .Key:before, .StateBtn.State4 .Key:before {
+  background-image: url(../img/race/icon_key_nk01.png);
+}
+
+.goodslist_commend_area_sample_1 {
+  color: #777;
+  font-size: 14px;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.goodslist_commend_area_sample_2 {
+  color: #777;
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+
+.goodslist_commend_area_sample_3 {
+  color: #c53131;
+  font-size: 1.5625rem;
+  font-weight: bold;
+}
+
+.goodslist_commend_area_sample_3 span {
+  font-size: 1.0625rem;
+  color: #777;
+}
+
+.goodslist_commend_area_sample_3 span.recomend {
+  font-size: 1.0625rem;
+  color: #777;
+}
+
+/*==============================================
+予想タブ商品一覧
+==============================================*/
+/* 取り消し除外 */
+.RaceYosoList .GensenYosoList .Inner span.Torikeshi {
+  color: #c00;
+  display: block;
+  text-align: center;
+  font-size: 83.4%;
+  padding-top: 10px;
+  background: #fff;
+}
+
+.RaceYosoList .GensenYosoList {
+  padding: 5px 0;
+}
+
+.RaceYosoList .GensenYosoList li {
+  border-top: 1px solid #dcdcdc;
+  background: #fff;
+  display: table;
+  position: relative;
+  width: 100%;
+  table-layout: fixed;
+  margin: 0;
+}
+
+/*=== （new）ポイントバックボタン ===*/
+.BtnArea span.PointBackBtn01 {
+  position: relative;
+  display: block;
+  color: #b7443e;
+  border: 1px solid #b7443e;
+  border-radius: 4px;
+  text-align: center;
+  font-size: 61.2%;
+  line-height: 1.4;
+  margin-top: 6px;
+}
+
+.BtnArea span.PointBackBtn01 span.PointBackTxt {
+  font-weight: bold;
+}
+
+/*=== （new）無料公開 ===*/
+.StateBtn .FreeFlag {
+  position: relative;
+  display: inline-block;
+  background: #b7443e;
+  color: #fff;
+  font-size: 72.3%;
+  padding: 3px 12px 2px;
+  font-weight: bold;
+  border-radius: 2px;
+  -webkit-transform: translateY(-3px);
+  -ms-transform: translateY(-3px);
+  transform: translateY(-3px);
+}
+
+.RaceYosoList .GensenYosoList .Hit {
+  border: 1px solid #b7443e;
+  border-top: 1px solid #b7443e;
+}
+
+.RaceYosoList .GensenYosoList .Hit + .Hit {
+  margin-top: 1px;
+}
+
+.RaceYosoList .GensenYosoList .Hit .StateArea {
+  background: #b7443e;
+  text-align: center;
+  margin: 10px 12px;
+}
+
+.GensenYosoList .BalanceWrap {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-pack: justify;
+  -ms-flex-pack: justify;
+  justify-content: space-between;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+}
+
+.GensenYosoList .BalanceArea {
+  -webkit-flex: 1;
+  -webkit-box-flex: 1;
+  -ms-flex: 1;
+  flex: 1;
+}
+
+.GensenYosoList .BalanceArea dl {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-pack: justify;
+  -ms-flex-pack: justify;
+  justify-content: space-between;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  -webkit-flex-wrap: wrap;
+  -ms-flex-wrap: wrap;
+  flex-wrap: wrap;
+  margin: 0 0 0 12px;
+}
+
+.GensenYosoList .BalanceArea dl dt,
+.GensenYosoList .BalanceArea dl dd {
+  font-size: 77.8%;
+  line-height: 1.4;
+}
+
+.GensenYosoList .BalanceArea dl dt {
+  margin-right: 6px;
+  white-space: nowrap;
+  width: 3em;
+}
+
+.GensenYosoList .BalanceArea dl dd em {
+  font-size: 114.3%;
+  font-weight: bold;
+}
+
+.GensenYosoList .BalanceArea dl.BalanceData {
+  color: #00aa8e;
+}
+
+.GensenYosoList .TypeOfBetArea {
+  padding-left: 12px;
+}
+
+.GensenYosoList .TypeOfBetArea dl {
+  font-size: 77.78%;
+}
+
+.GensenYosoList .TypeOfBetArea dt {
+  clear: both;
+  float: left;
+  width: 3em;
+  line-height: 1.2;
+  text-align-last: justify;
+}
+
+.GensenYosoList .TypeOfBetArea dd {
+  position: relative;
+  margin-left: 4em;
+  font-weight: bold;
+  line-height: 1.2;
+}
+
+.GensenYosoList .TypeOfBetArea dd::before {
+  content: "\FF1A";
+  position: absolute;
+  top: 0;
+  left: -1em;
+  display: inline-block;
+  width: 1em;
+  font-weight: normal;
+  text-align: center;
+}
+
+.GensenYosoList .TypeOfBetArea dt:nth-of-type(n+2),
+.GensenYosoList .TypeOfBetArea dd:nth-of-type(n+2) {
+  margin-top: 5px;
+}
+
+.GensenYosoList .Comment {
+  margin: 10px 12px;
+  padding: 8px 12px;
+  overflow: hidden;
+  background: #f3f3f3;
+  border-radius: 4px;
+}
+
+.GensenYosoList .Comment > p.Txt {
+  background: #f3f3f3;
+  padding: 0;
+  color: #777;
+  font-size: 77.78%;
+  -o-text-overflow: ellipsis;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.GensenYosoList .YosokaDataOpenBtn {
+  font-size: 66.67%;
+  line-height: 1.3;
+  text-align: right;
+}
+
+.GensenYosoList .YosokaDataOpenBtn a {
+  position: relative;
+  display: inline-block;
+  color: #666;
+  border: 1px solid #b0b0b0;
+  border-radius: 4px;
+  padding: 3px 18px 3px 8px;
+}
+
+.GensenYosoList .YosokaDataOpenBtn a:after {
+  content: '';
+  display: block;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 6px 3px 0 3px;
+  border-width: 6px 3.3px 0 3.3px;
+  border-color: #666 transparent transparent transparent;
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  margin-top: -3px;
+}
+
+.GensenYosoList .YosokaDataOpenBtn a.OpenData:after {
+  -webkit-transform: rotate(180deg);
+  -moz-transform: rotate(180deg);
+  -ms-transform: rotate(180deg);
+  transform: rotate(180deg);
+}
+
+/*--　もっとみる　--*/
+#delay_umai_baken .YosoList_MoreRead {
+  display: block;
+  font-size: 14px;
+  border: 2px solid #e5e4de;
+  border-radius: 4px;
+  color: #444;
+  font-size: 114.2%;
+  font-weight: bold;
+  text-align: center;
+  padding: 20px 0;
+  max-width: 645px;
+  margin: 6px auto 18px;
+}
+
+#delay_umai_baken .YosoList_MoreRead .Icon_More02 {
+  background: none;
+  padding-left: 0;
+  font-size: 77.78%;
+}
+
+.baken_note {
+  font-size: 77.77777777777779%;
+  line-height: 1.5;
+  padding: 0 20px 10px;
+  color: #777;
+}
+/* 予想詳細データ */
+.YosoDetailDataArea {
+  padding: 10px 12px 0;
+}
+
+.YosoDetailDataArea .OsusumeTxt02 {
+  background: #f3f3f3;
+  border-radius: 4px;
+  padding: 10px 14px;
+}
+
+.YosoDetailDataArea .OsusumeTxt02 span.OsusumeLabel01 {
+  display: inline-block;
+  background: #3252bc;
+  color: #fff;
+  border-radius: 7px;
+  padding: 0 6px;
+  line-height: 1.3;
+  font-size: 66.67%;
+  margin-bottom: 8px;
+}
+
+.YosoDetailDataArea .OsusumeTxt02 p {
+  background: #f3f3f3;
+  border-radius: 4px;
+  font-size: 77.78%;
+  line-height: 1.5;
+}
+
+.YosokaNumData {
+  display: table;
+  width: 100%;
+}
+
+.YosokaNumData dl {
+  display: table-cell;
+  width: 50%;
+  text-align: center;
+  padding: 12px 4px;
+}
+
+.YosokaNumData dl dt,
+.YosokaNumData dl dd {
+  display: inline;
+  font-size: 72.34%;
+}
+
+.YosokaNumData dl dd em {
+  display: inline-block;
+  font-size: 130.6%;
+  font-weight: bold;
+  padding: 0 3px;
+}
+
+.YosoDetailDataArea .OsusumeTxt02 + .YosoDetailSec {
+  margin-top: 12px;
+}
+
+.YosoDetailDataArea .YosoDetailSec table {
+  width: 100%;
+  background: #fff;
+  border-collapse: collapse;
+  border: 1px solid #dadada;
+}
+
+.YosoDetailDataArea .YosoDetailSec table th {
+  font-size: 72.22%;
+  font-weight: normal;
+  padding: 5px;
+  text-align: center;
+  white-space: nowrap;
+  background: #eaeaea;
+  border: 1px solid #dadada;
+  width: 35%;
+  min-width: 50px;
+  line-height: 1.3;
+  vertical-align: middle;
+}
+
+.YosoDetailDataArea .YosoDetailSec table th.word_2char {
+  padding-left: 16px;
+  padding-left: calc(5px + 1em);
+  letter-spacing: 1em;
+}
+
+.YosoDetailDataArea .YosoDetailSec table td {
+  font-size: 66.67%;
+  padding: 5px;
+  text-align: right;
+  border: 1px solid #dadada;
+  width: 65%;
+  text-align: center;
+  line-height: 1.3;
+  vertical-align: middle;
+}
+
+@media screen and (max-width: 350px) {
+  .YosoDetailDataArea .YosoDetailSec table th {
+    width: auto;
+  }
+  .YosoDetailDataArea .YosoDetailSec table td {
+    width: 60%;
+  }
+}
+
+.RaceYosoList .GensenYosoList .BalanceWrap .BtnArea .StateBtn {
+  overflow: visible;
+  width: 145px;
+  height: 50px;
+  padding: 8px 0;
+  border: none;
+}
+
+.RaceYosoList .GensenYosoList .BalanceWrap .BtnArea .StateBtn.State1 {
+  color: #fff;
+  background-color: #e5a700;
+}
+
+.RaceYosoList .GensenYosoList .BalanceWrap .BtnArea .StateBtn.State2 {
+  color: #666;
+  background: #e3e3e3;
+}
+
+.RaceYosoList .GensenYosoList .BalanceWrap .BtnArea .StateBtn.State3 {
+  background: #da4343;
+  color: #fff;
+}
+
+.RaceYosoList .GensenYosoList .BalanceWrap .BtnArea .StateBtn span.Point {
+  font-size: 100%;
+  line-height: 1.2;
+  margin-bottom: 2px;
+}
+
+.RaceYosoList .GensenYosoList .BalanceWrap .BtnArea .StateBtn span.Point,
+.RaceYosoList .GensenYosoList .BalanceWrap .BtnArea .StateBtn span.Txt {
+  display: block;
+  text-align: center;
+  margin-right: 0;
+}
+
+.GensenYosoList .Hit .Yosoka .YosokaImage:after {
+  content: '';
+  display: inline-block;
+  background: url("../img/yoso/stamp_hit.png") no-repeat;
+  -webkit-background-size: 58px 58px;
+  -moz-background-size: 58px 58px;
+  -ms-background-size: 58px 58px;
+  background-size: 58px 58px;
+  width: 58px;
+  height: 58px;
+  position: absolute;
+  bottom: -10px;
+  right: -35px;
+  z-index: 10;
+}
+
+.IconState02 {
+  background-position: -127px -1px;
+}
+
+.RaceYosoList .GensenYosoList .Inner {
+  padding: 12px 0 13px;
+  color: #666;
+}
+
+.GensenYosoList .Inner .OsusumeTxt01 {
+  margin: 0 12px 10px;
+}
+
+.GensenYosoList .Inner .OsusumeTxt01 > p {
+  display: inline-block;
+  position: relative;
+  background: #b7443e;
+  color: #fff;
+  font-size: 13px;
+  padding: 0 12px;
+  max-width: 96%;
+  max-width: calc(100% - 10px);
+  vertical-align: top;
+}
+
+.GensenYosoList .Inner .OsusumeTxt01 > p:after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: -10px;
+  height: 0;
+  border-top: 19px solid #b7443e;
+  border-right: 10px solid transparent;
+}
+
+.GensenYosoList .Inner .OsusumeTxt01 > p span {
+  display: inline-block;
+  max-width: 100%;
+  line-height: 19px;
+  vertical-align: top;
+  -o-text-overflow: ellipsis;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.GensenYosoList .Yosoka {
+  position: relative;
+  padding: 0 12px;
+}
+
+.GensenYosoList .Yosoka .YosokaImage {
+  width: 65px;
+  position: absolute;
+  top: 0;
+  left: 12px;
+}
+
+.GensenYosoList .Yosoka .YosokaImage img {
+  width: 100%;
+  vertical-align: bottom;
+  border-radius: 4px;
+}
+
+.GensenYosoList .PickupRace .BtnArea .StateBtn:after,
+.GensenYosoList .AnaumaRace .BtnArea .StateBtn:after {
+  content: '';
+  display: block;
+  position: absolute;
+  top: -2px;
+  left: 0;
+  width: 25px;
+  height: 54px;
+  background-image: url("../img/yoso/flg_sprite_sp_baken.png");
+  -webkit-background-size: 70px auto;
+  -moz-background-size: 70px auto;
+  -ms-background-size: 70px auto;
+  background-size: 70px auto;
+  background-position: 0 0;
+  background-repeat: no-repeat;
+  -moz-transform: rotate(-15deg);
+  -webkit-transform: rotate(-15deg);
+  -ms-transform: rotate(-15deg);
+  transform: rotate(-15deg);
+}
+
+.GensenYosoList .PickupRace .BtnArea .StateBtn:after {
+  background-position: 0 0;
+}
+
+.GensenYosoList .AnaumaRace .BtnArea .StateBtn:after {
+  background-position: -28px 0;
+}
+
+.GensenYosoList .Yosoka .Profile {
+  position: relative;
+  padding-left: 78px;
+  min-height: 65px;
+}
+
+.GensenYosoList .Yosoka .Profile .YosokaNameWrap {
+  display: table;
+  width: 100%;
+  margin-bottom: 2px;
+}
+
+.GensenYosoList .Yosoka .Profile .YosokaFavData {
+  display: table-cell;
+  font-size: 72.3%;
+  width: 70px;
+  text-align: right;
+  vertical-align: middle;
+}
+
+.GensenYosoList .Yosoka .Profile .YosokaFavData span.Icon_Fav {
+  display: inline-block;
+  width: 11px;
+  height: 11px;
+  background-image: url("../img/icon/icon_fav01.png");
+  -webkit-background-size: 11px auto;
+  -moz-background-size: 11px auto;
+  -ms-background-size: 11px auto;
+  -o-background-size: 11px auto;
+  background-size: 11px auto;
+  background-position: 0 0;
+  background-repeat: no-repeat;
+  margin: 1px 4px;
+  vertical-align: top;
+}
+
+.GensenYosoList .Yosoka .Profile .Name {
+  display: table-cell;
+  font-size: 105.6%;
+  font-weight: bold;
+  margin-bottom: 0;
+  line-height: 1.3;
+  overflow: hidden;
+  -o-text-overflow: ellipsis;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: middle;
+  max-width: 0;
+}
+
+.GensenYosoList .Yosoka .Profile .CatchPhrase {
+  font-size: 77.78%;
+  line-height: 1.3;
+  margin-bottom: 4px;
+}
+
+.RaceYosoList .GensenYosoList .BtnArea {
+  padding: 0 12px;
+  background: #fff;
+  margin-top: 0;
+}
+
+/*-- リスト省略  --*/
+.RaceYosoList .GensenYosoList ul li:nth-child(n+11) {
+  display: none;
+}
+
+/* Information */
+.Schedule_Infomation_Box {
+  font-size: 86%;
+  font-weight: bold;
+  text-align: center;
+  margin: 12px 14px;
+  padding: 12px;
+  border: 5px solid #ddd;
+  background: #fff;
+  line-height: 1.8;
+}
+
+.slick-track {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  height: 100%;
+}
+
+.slick-slide {
+  float: none;
+}

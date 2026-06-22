@@ -1,0 +1,9 @@
+
+
+try{__tagObject_callback_1781779327187484({ImpressionID:"5c0bf2d3d6844843825ef0a2cd43ad0f",ServerPublicDns:"tpsc-ae1.doubleverify.com"});}catch(e){}
+try{$dvbs.pubSub.publish("BeforeDecisionRender","5c0bf2d3d6844843825ef0a2cd43ad0f");}catch(e){}
+try{__verify_callback_1781779327187484({
+ResultID:2,
+Passback:"",
+ServerContext:{"fd":{"common":{"isBsAllow":"true"},"isBsAllow":true},"ce":{"ddt":1,"dt":1}}});}catch(e){}
+try{$dvbs.pubSub.publish("AfterDecisionRender","5c0bf2d3d6844843825ef0a2cd43ad0f");}catch(e){}

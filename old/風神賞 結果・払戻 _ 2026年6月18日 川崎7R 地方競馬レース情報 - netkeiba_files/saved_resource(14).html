@@ -1,0 +1,8 @@
+
+<!-- saved from url=(0012)about:srcdoc -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><script>(()=>{"use strict";const e="Prebid Event",n="browserIntervention";window.render=function(t,r,i){let{ad:o,adUrl:l,width:s,height:d,instl:c}=t,{mkFrame:a,sendMessage:h}=r;if(function(){const t=window;if("ReportingObserver"in t)try{new t.ReportingObserver(t=>{var r;r=t[0],h(e,{event:n,intervention:r})},{buffered:!0,types:["intervention"]}).observe()}catch(e){}}(),!o&&!l){const e=new Error("Missing ad markup or URL");throw e.reason="noAd",e}{if(null==d){var v;const e=null===(v=i.document)||void 0===v?void 0:v.body;[e,null==e?void 0:e.parentElement].filter(e=>null!=(null==e?void 0:e.style)).forEach(e=>{e.style.height="100%"})}const e=i.document,n={width:null!=s?s:"100%",height:null!=d?d:"100%"};if(l&&!o?n.src=l:n.srcdoc=o,e.body.appendChild(a(e,n)),c&&i.frameElement){const e=i.frameElement.style;e.width=s?"".concat(s,"px"):"100vw",e.height=d?"".concat(d,"px"):"100vh"}}}})();</script>
+            <script>
+              window.parent.postMessage(
+                  { type: 'RENDERER_READY_3b2636ab9d17a78' },
+                  '*'
+            );</script></head><body marginwidth="0" marginheight="0"></body></html>

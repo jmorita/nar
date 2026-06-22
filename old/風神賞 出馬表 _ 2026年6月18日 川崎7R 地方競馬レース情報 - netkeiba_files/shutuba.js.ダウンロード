@@ -1,0 +1,310 @@
+
+/*
+ * $Id: shutuba.js 4987 2015-12-02 02:01:54Z matsushima $
+ */
+
+// select function
+$(function() {
+    $('.HorseCheck_Select').click(function() {
+	if ($(this).prop('checked')) {
+            $(this).each(function() {
+		$(this).parent().parent().addClass('Selected');
+		update_cart_checkbox(_shutuba_cart_group, $(this).attr('name'), $(this).val(), 'add');
+            });
+	} else {
+            $(this).each(function() {
+		$(this).parent().parent().removeClass('Selected');
+		update_cart_checkbox(_shutuba_cart_group, $(this).attr('name'), $(this).val(), 'remove');
+            });
+	}
+    });
+
+    $( '#clear_select' ).click( function() {
+	   $( '#shutuba_form input[type=checkbox]' ).prop( 'checked', false );
+    });
+
+    //------------------------------------------------------------
+    var mark_mode = getCookie("mark_mode");
+//    console.log('mark_mode='+mark_mode);
+
+    if('mark' == mark_mode || '' == mark_mode){
+        cart_get_itemlist( _shutuba_cart_group, init_select_menu );
+    }else{
+	//    $("[class^='makeMeFancy']").each(function(){
+	//            selectFancy( $(this).attr('class') );
+	//    });
+        cart_get_itemlist( _shutuba_cart_group, init_checkbox );
+    }
+
+    // myhorse entry ?? 
+    get_myhorse_entry(_shutuba_race_id, callback_myhorse_show);
+
+});
+
+//------------------------------------------------------------
+function callback_myhorse_show(json)
+{
+//    console.log('callback_myhorse_show');
+
+    for(var race_id in json.ary_race){
+
+    	for(var horse_id in json.ary_race[race_id]){
+          var myhorse_id = 'myhorse_'+horse_id
+          var myhorse1_id = 'myhorse1_'+horse_id
+          var bamei_id = 'Bamei_'+horse_id
+        
+          //$('#'+myhorse_id).removeClass('disp_none');
+          $('.'+myhorse_id).removeClass('disp_none');
+          $('.'+myhorse1_id).addClass('disp_none');
+          if (json.ary_race[race_id][horse_id]["group_name"] != "") {
+            var e = $("<div />");
+            var e1 = $("<span />").addClass('group_name').text(json.ary_race[race_id][horse_id]["group_name"]);
+            //e.append(e1).append(document.createTextNode(json.ary_race[race_id][horse_id]["memo"]));
+            e.append(e1);
+            $('#'+bamei_id).html(e.html());
+          } else {
+            //$('#'+bamei_id).text(json.ary_race[race_id][horse_id]["memo"]);
+          }
+          //$('#'+bamei_id).attr('title', json.ary_race[race_id][horse_id]["tooltips"]);
+          if (json.ary_race[race_id][horse_id]["memo"] == '') {
+            if (json.ary_race[race_id][horse_id]["group_name"] != "") {
+                var e = $("<div />")
+                var e1 = $("<span />").addClass('group_name').text(json.ary_race[race_id][horse_id]["group_name"])
+                //e.append(e1).append(document.createTextNode("お気に入り馬登録馬"))
+                e.append(e1);
+                $('#'+bamei_id).parent().html(e.html());
+            } else {
+                //$('#'+bamei_id).parent().text("お気に入り馬登録馬" );
+            }
+          }
+    	}
+    }
+    user_note = json.ary_note;
+    for(var key in json.ary_note){
+        if (json.ary_note[key][0] !== undefined) {
+            var memo = '<span class="Note_Text">'+escapeHtml(json.ary_note[key][0]['memo'])+'</span>';
+            memo += '<span class="NoteIcon">編集</span>';
+            $('#note0_'+key).html(memo);
+        }
+        if (json.ary_note[key][1] !== undefined) {
+            var memo = '';
+            memo += '<span class="Note_Pastrace">'+json.ary_note[key][1]['PastN']+'</span>';
+            if (json.ary_note[key][1]['label_elm'] !== undefined && Object.keys(json.ary_note[key][1]['label_elm']).length>0) {
+                $.each(json.ary_note[key][1]['label_elm'], function(l_k, l_v) {
+                    memo +=  '<span class="'+l_v.class+'">'+l_v.text+'</span>';
+                });
+            }
+            memo += '<span class="Note_Text">'+escapeHtml(json.ary_note[key][1]['memo'])+'</span>';
+            memo += '<span class="NoteIcon">編集</span>';
+            $('#note1_'+key).html(memo);
+            var race_info = '<span class="Race_Day">'+json.ary_note[key][1]['RaceDate']+'</span> '
+            +'<span class="Race_Place">'+json.ary_note[key][1]['Jyo']+'</span> '
+            +'<span class="Race_R">'+json.ary_note[key][1]['RaceNum']+'R</span> '
+            +'<span class="Race_Name">'+json.ary_note[key][1]['RaceName'];
+            if (json.ary_note[key][1]['Grade']) {
+                race_info += ' '+json.ary_note[key][1]['Grade'];
+            }
+            race_info += '</span>';
+            $('#EditRaceHorseModal-'+key).find('.NoteForm_Head').html(race_info);
+        }
+    }
+}
+function escapeHtml(text) {
+    return document.createElement('div')
+        .appendChild(document.createTextNode(text))
+        .parentNode
+        .innerHTML
+}
+//-- 印のプルダウン
+function selectFancy( _menu_class, _mark_id )
+{
+    $(function() {
+	//var select = $('select.makeMeFancy');
+	var select = $('select.' + _menu_class);
+	var select_name = select.attr('name');
+
+	var selectBoxContainer = $('<div>', {
+            width: select.outerWidth(),
+            class: 'tzSelect',
+            html:'<div class="selectBox">--</div>'
+	});
+
+	var dropDown = $('<ul>', {class: 'dropDown'});
+	var selectBox = selectBoxContainer.find('.selectBox');
+
+	select.find('option').each(function(i) {
+            var option = $(this);
+            if (i == select.attr('selectedIndex')) {
+		selectBox.html(option.text());
+            }
+            var li = $('<li>', {
+		html: '<span>' + option.data('html-text') + '</span>'
+            });
+
+            var tmp = option.val();
+            var mark = tmp.split('_');
+            if(_mark_id != undefined && mark[1] == _mark_id){
+//		console.log('_mark_id='+_mark_id);
+		selectBox.html(option.text());
+		dropDown.trigger('hide');
+		select.val(option.val());
+            }
+
+
+            li.click(function() {
+		selectBox.html(option.text());
+		dropDown.trigger('hide');
+		select.val(option.val());
+
+        if(option.text() == '消'){
+            $(this).parents('.HorseList').addClass('NoSelected');
+            $(this).parents('.HorseList').removeClass('Selected');
+        }else if (option.text() != '--' && option.text() != '消') {
+            $(this).parents('.HorseList').removeClass('NoSelected');
+            $(this).parents('.HorseList').addClass('Selected');
+		} else {
+            $(this).parents('.HorseList').removeClass('Selected');
+            $(this).parents('.HorseList').removeClass('NoSelected');
+		}
+
+//		console.log('name='+select.attr('name')+' val='+option.val());    // debug
+		if('0' == option.val()){
+                    update_cart_checkbox(_shutuba_cart_group, select.attr('name'), option.val(), 'remove');
+		}else{
+                    update_cart_checkbox(_shutuba_cart_group, select.attr('name'), option.val(), 'add');
+		}
+		return false;
+
+            });
+
+            dropDown.append(li);
+	});
+
+
+	selectBoxContainer.append(dropDown.hide());
+	select.hide().after(selectBoxContainer);
+
+	dropDown.bind('show',function(){
+            if(dropDown.is(':animated')){
+		return false;
+            }
+
+            selectBox.addClass('expanded');
+            dropDown.show();
+	}).bind('hide',function(){
+            if(dropDown.is(':animated')){
+		return false;
+            }
+            selectBox.removeClass('expanded');
+            dropDown.hide();
+	}).bind('toggle',function(){
+            if(selectBox.hasClass('expanded')){
+		dropDown.trigger('hide');
+            }
+            else dropDown.trigger('show');
+	});
+	selectBox.click(function(){
+            dropDown.trigger('toggle');
+            return false;
+	});
+
+	// If we click anywhere on the page, while the
+	// dropdown is shown, it is going to be hidden:
+
+	$(document).click(function(){
+            dropDown.trigger('hide');
+	});
+    });
+}
+//-- チェック状態を表示(復元)する    (callback)
+function init_checkbox( _cart )
+{
+//    console.log('init_checkbox');
+    for(var item_id in _cart){
+//    	console.log('item_id='+item_id);
+	var tmp = _cart[item_id]['_cd'];
+	var mark = tmp.split('_');
+	if(mark[1]!=0 && mark[1]!=99)
+	{
+	    $('#check_' + item_id).prop("checked", true);
+	    $('#tr_' + item_id).addClass("Selected");
+	}
+    }
+}
+function init_select_menu( _cart )
+{
+//    console.log('init_select_menu');
+
+    var ary_item = new Object();
+
+    if (_cart) {
+        for (var item_id in _cart) {
+            var tmp = _cart[item_id]['_cd'];
+            var mark = tmp.split('_');
+            ary_item[item_id] = mark[1];
+//            console.log('item_id=' + item_id + ' client_data=' + ary_item[item_id]);
+
+            if (mark[1] != 0 && mark[1] != 99) {
+                $('#tr_' + item_id).addClass("Selected");
+            }
+            /* Change on intern */
+            if (mark[1] == 99) {
+                $('#tr_' + item_id).addClass("NoSelected");
+            }
+        }
+    }
+
+    $("[class^='makeMeFancy']").each(function(){
+	var select = $('select.' + $(this).attr('class'));
+	var select_name = select.attr('name');
+	if(ary_item[select_name]){
+//            console.log('key='+select_name+' val='+ary_item[select_name]);
+            selectFancy( $(this).attr('class'), ary_item[select_name] );
+	}else{
+            selectFancy( $(this).attr('class') );
+	}
+    });
+
+}
+
+//-- カートを更新する(checkbox)
+function update_cart_checkbox( _group, _name, _value, _mode )
+{
+//    console.log('update_cart_checkbox');
+//    console.log('_group='+_group+' _name='+_name+' _value='+_value+' _mode='+_mode);
+    var ary_client_data = _value;
+    if(_mode == 'add'){
+	cart_add_item( _group, _name, 1, 0, ary_client_data );
+    }else if(_mode == 'remove'){
+	cart_remove_item( _group, _name );
+    }
+}
+
+//-- チェック・印モードを変更する
+function change_mark_mode(page_id, race_id, domain)
+{
+//    console.log('change_mark_mode('+page_id+','+race_id+')');
+    var mark_mode = getCookie("mark_mode");
+    var cookie_value = 'check';
+    if(mark_mode == 'mark' || mark_mode == ''){
+        cookie_value = 'check';
+    } else {
+        cookie_value = 'mark';
+    }
+
+    var cookie_domain = domain ? domain : '.netkeiba.com';
+    //cookie設定
+    //document.cookie = 'mark_mode=' + cookie_value + '; path=/; max-age=31536000; domain=.netkeiba.com;';
+    document.cookie = 'mark_mode=' + cookie_value + '; path=/; max-age=31536000; domain=' + cookie_domain + ';';
+    location.reload();
+    //window.location.href = _race_location_url + '?pid='+page_id+'&race_id='+race_id+'&action=change_mark';
+    //window.location.href = _action_api_url + '?pid='+page_id+'&race_id='+race_id;
+}
+
+$(function() {
+    $('.Shutuba_Update_Time dl dt').append('<span class="Icon_ArrowB"></span>');
+    $('.Shutuba_Update_Time dl dt').click(function() {
+        $('.Shutuba_Update_Time dl dt > span').toggleClass('Icon_ArrowT').toggleClass('Icon_ArrowB')
+        $('+ dd', this).slideToggle('fast');
+    });
+});

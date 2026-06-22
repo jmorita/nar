@@ -1,0 +1,20 @@
+function getAdGamRectangle(adId, w, h, klass) {
+  const escAttr = (v) =>
+    String(v ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+
+  const id = escAttr(adId);
+  const c = escAttr(klass);
+
+  return `
+<div id='${id}' class="${c}" style='min-width: ${w}px; min-height: ${h}px;'>
+  <script>
+    googletag.cmd.push(function() { googletag.display('${id}'); });
+  </script>
+</div>
+`.trim();
+}

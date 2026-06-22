@@ -1,0 +1,57 @@
+//===========================================================
+// Docment Readyになったときに処理するもの
+//===========================================================
+$(document).ready(function ()
+{
+	//MY印の初期値
+	if (typeof _odds_ninki_cart_group_horse != "undefined") {
+		// cart_get_itemlist( _odds_ninki_cart_group_horse, init_select_mark );
+	}
+	
+});
+
+//===========================================================
+// MY印の初期値をセットする
+// in: _cart  ...cart_get_itemlist()の戻り(item_id)
+//===========================================================
+function init_select_mark( _cart )
+{
+    console.log('init_select_mark');
+
+    var ary_mark = new Array();
+
+	// 該当レースで選択されたMY印を取得
+    for(var item_id in _cart)
+	{
+		var tmp = _cart[item_id]['_cd'];
+		if (tmp) {
+			var mark = tmp.split('_');
+			if ('1' in mark)
+			{
+				ary_mark[ item_id ] = mark[1];	//重み印モードのとき
+			}
+			else
+			{
+				ary_mark[ item_id ] = 100;		//チェックモードのとき
+			}
+		}
+		console.log('item_id='+item_id+' client_data='+ary_mark[ item_id ]);
+    }
+
+	// ユーザーのMY印をセット
+    $("[id^='mymark']").each(function()
+	{ // ドキュメント内のMY印の選択ボックスの数だけループ
+		
+		var box 		= $(this);
+		var tmp_seq 	= box[0].id;			//seq
+		var seq 	= tmp_seq.split('_');
+		var mark_data 	= ary_mark[seq[1]];
+		if (!mark_data || mark_data == 0) mark_data = '00';
+
+		$(this).parent().removeClass('MarkIcon Mark00');
+		$(this).parent().addClass('MarkIcon Mark'+mark_data);
+		$(this).attr('value', mark_data);
+	});
+	
+}
+

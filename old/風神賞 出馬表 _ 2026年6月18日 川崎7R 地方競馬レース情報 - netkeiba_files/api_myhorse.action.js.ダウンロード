@@ -1,0 +1,175 @@
+
+/*
+*  $Id: api_myhorse.action.js 18236 2018-11-21 10:50:26Z t-nakano $
+*/
+
+//------------------------------------------------------------
+function get_myhorse_entry( _ary_race_id, _callback )
+{
+//    console.log('get_myhorse_entry');
+
+    var url = '';
+    var _data = { pid : 'api_get_myhorse_entry' };
+    _data.input  = 'UTF-8';
+    _data.output = 'json';
+    _data.race_id = _ary_race_id;
+    $.ajax( { type     : 'GET',
+	      url      : _action_api_my_horse_url,
+          data     : _data,
+          dataType : 'json',
+          cache: false,
+          xhrFields: {
+              withCredentials: true
+          },
+	      success  : function( json )
+              {
+                  if(json.status == 'OK'){
+		      if(undefined != _callback){
+			  _callback( json );
+		      }
+		  }
+              },
+	      error  : function(XMLHttpRequest, textStatus, errorThrown)
+              {
+		  console.log('textStatus='+textStatus);
+	      }
+	    });
+    return url;
+}
+
+//------------------------------------------------------------
+function get_myhorse_entry_data(_ary_race_id, _callback) {
+    getMyhorseEntryDataV3(_ary_race_id);
+/*
+    var url = '';
+    var _data = {pid: 'api_get_myhorse_entry_data'};
+    _data.input = 'UTF-8';
+    _data.output = 'json';
+    _data.race_id = _ary_race_id;
+    $.ajax({
+        type: 'GET',
+        url: _action_api_url_myhorse_data,
+        data: _data,
+        headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache', 'Expires': '0'
+        },
+        cache: false,
+        dataType: 'json',
+        xhrFields: {withCredentials: true},
+        success: function (json) {
+            if (json.status == 'OK') {
+                if (undefined != _callback) {
+                    _callback(json);
+                }
+            }
+        },
+        error: function (XMLHttpRequest, textStatus, errorThrown) {
+            console.log('textStatus=' + textStatus);
+        }
+    });
+    return url;
+*/
+}
+
+function getMyhorseEntryDataV3(_ary_race_id) {
+//    console.log('getMyhorseEntryDataV3');
+    if (_ary_race_id.length<1) {
+        $('#HorseBookmark_Box_v3').empty();
+        return;
+    }
+    var _data = {};
+    _data.input    = 'UTF-8';
+    _data.output   = 'jsonp';
+    _data.race_id  = _ary_race_id;
+    $.ajax( { type     : 'POST',
+        url      : _action_api_url_myhorse_data,
+        data     : _data,
+        dataType : _data.output,
+        success  : function( elm ){
+            if (elm.length>0) {
+                $('#HorseBookmark_Box_v3').html(elm);
+                $('[id^=n-entry_]').each(function(){
+                    var n = $(this).prop('id').replace('n-entry_', '');
+                    $('#note_'+n).removeClass('disp_none');
+                });
+                $('[id^=b-entry_]').each(function(){
+                    var n = $(this).prop('id').replace('b-entry_', '');
+                    $('#myhorse_'+n).removeClass('disp_none');
+                });
+            } else {
+                $('#HorseBookmark_Box_v3').empty();
+            }
+        },
+        complete : function (){}
+    });
+}
+
+//------------------------------------------------------------
+function get_race_movie_data( _ref_pogId, _ref_subname_id, _ary_race_id, arg_kaisai_date, _callback )
+{
+    var url = '';
+    var _data = { pid : 'api_get_race_movie_data' };
+    _data.input  = 'UTF-8';
+    _data.output = 'json';
+    _data.ref_pogId = _ref_pogId;
+    _data.ref_subname_id = _ref_subname_id;
+    _data.race_id = _ary_race_id;
+    _data.arg_kaisai_date = arg_kaisai_date;
+    $.ajax( { type     : 'GET',
+	    url      : _action_api_url_race_movie_data,
+  	    data     : _data,
+        headers : {
+            'Cache-Control': 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache','Expires': '0'
+        },
+        cache: false,
+	      dataType : 'json',
+          xhrFields: { withCredentials: true },
+	      success  : function( json )
+              {
+                    if(json.status == 'OK'){
+                        if(undefined != _callback){
+                                _callback( json );
+                        }
+                    }
+              },
+	      error  : function(XMLHttpRequest, textStatus, errorThrown)
+              {
+	              console.log('textStatus='+textStatus);
+              }
+	    });
+    return url;
+}
+
+//------------------------------------------------------------
+function get_myrace_data( arg_kaisai_date, _callback )
+{
+    var _data = { pid : 'api_get_my_race' };
+    _data.input       = 'UTF-8';
+    _data.output      = 'json';
+    _data.kaisai_date = arg_kaisai_date;
+
+    $.ajax( { type     : 'GET',
+        url      : _action_api_url_myrace_data,
+        data     : _data,
+        dataType : _data.output,
+        headers : {
+            'Cache-Control': 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache','Expires': '0'
+        },
+        cache: false,
+        success  : function( json )
+        {
+            if (json.status == 'NG') {
+                console.log('status:NG reason:'+ json.reason);
+            } else {
+                if(undefined != _callback){
+                    _callback( json );
+                }
+            }
+        },
+        error  : function(XMLHttpRequest, textStatus, errorThrown)
+        {
+            console.log('XMLHttpRequest: %O',XMLHttpRequest);
+            console.log('textStatus: %s',textStatus);
+        }
+    });
+} 

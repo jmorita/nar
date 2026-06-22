@@ -1,0 +1,41 @@
+
+/*
+ * $Id: shutuba.js 4949 2015-11-29 15:51:59Z matsushima $
+ */
+
+// $(document).ready(function ()
+// {
+//     //
+//     // ばんば馬のリンクを削除
+//     //
+//     $("[id^='umalink_']").each(function(){
+//         var link_val = $(this)[0].innerHTML;
+//         var query = location.search.replace(/^\?/, '').split('&');
+//         var ary_q = {};
+//         for(var i=0; i<query.length; i++){
+//         var q = query[i].split('=');
+//         ary_q[q[0]] = q[1];
+//         }
+        
+//         if(undefined != ary_q['race_id'])
+//         {
+//     		var raceid=ary_q['race_id'];
+
+//     		if( raceid.substr(4,2)=='65' )
+//     		{
+//     			$(this)[0].outerHTML=link_val;
+//     		}
+//         }
+//         else if (undefined != _umalink_raceid)
+//         {
+//     		var raceid=_umalink_raceid;
+
+//     		if( raceid.substr(4,2)=='65' )
+//     		{
+//     			$(this)[0].outerHTML=link_val;
+//     		}
+//         }
+//     });
+// });
+	
+
