@@ -77,9 +77,9 @@ NAR_VENUE_NAME = {
     '50': '園田', '51': '姫路', '54': '高知', '55': '佐賀', '65': '帯広',
 }
 
-# 取得 T-label (#L901 の SNAPSHOT_CONFIG と同じ順序)
-T_LABELS = ['T60', 'T30', 'T15', 'T10', 'T5', 'T3', 'T1']
-T_OFFSETS = {'T60': 60, 'T30': 30, 'T15': 15, 'T10': 10, 'T5': 5, 'T3': 3, 'T1': 1}
+# 取得 T-label (#L901 v2 の SNAPSHOT_CONFIG と同じ順序、T-2 追加済み)
+T_LABELS = ['T60', 'T30', 'T15', 'T10', 'T5', 'T3', 'T2', 'T1']
+T_OFFSETS = {'T60': 60, 'T30': 30, 'T15': 15, 'T10': 10, 'T5': 5, 'T3': 3, 'T2': 2, 'T1': 1}
 
 print(f'SNAPSHOT_DIR: {SNAPSHOT_DIR}  (exists={SNAPSHOT_DIR.exists()})')
 print(f'RESULT_DIR  : {RESULT_DIR}    (exists={RESULT_DIR.exists()})')
@@ -1090,63 +1090,117 @@ display(_style_best(bt_uma_t1))
 
 # ─────────────────────────────────────────────────────────────────────────────
 md("""
-## 9. T-3 終端 vs T-1 終端 比較
+### 8.x 終端を T-2 に変えた検証 (TXX → T-2)
 
-同じ start_label について、終端を T-3 にした場合と T-1 にした場合の `最適 ROI` と `最適 P/L` を並べる。
-- ROI / P/L が大きく改善する → 直前 2 分のシグナルが効いている (= T-1 終端を取りに行く価値あり)
-- 改善が小さい / 母数が大きく減る → T-3 終端で十分
+`#L901 v2` が T-2 取得を開始したため、終端 T-2 のパターンも検証。
+T-2 は **自動投票の最終評価点としても現実的** (締切まで約 120 秒の余裕)。
 """)
 
 # ─────────────────────────────────────────────────────────────────────────────
 code("""
-def compare_endpoints(bt_t3: pd.DataFrame, bt_t1: pd.DataFrame, label: str) -> pd.DataFrame:
-    '''start_label をキーにして T3 終端と T1 終端を横並びで比較.'''
-    def _start(p):  # 'T60→T3' → 'T60'
-        return p.split('→')[0]
+START_LABELS_T2 = ['T60', 'T30', 'T15', 'T10', 'T5', 'T3']
+END_LABEL_T2 = 'T2'
 
-    t3 = bt_t3.assign(start=bt_t3['pattern'].apply(_start)).set_index('start')
-    t1 = bt_t1.assign(start=bt_t1['pattern'].apply(_start)).set_index('start')
-    starts = sorted(set(t3.index) | set(t1.index),
+pat_tan_t2: dict[str, pd.DataFrame] = {s: build_pattern(s, 'tanfuku', END_LABEL_T2)
+                                        for s in START_LABELS_T2}
+pat_uma_t2: dict[str, pd.DataFrame] = {s: build_pattern(s, 'umaren',  END_LABEL_T2)
+                                        for s in START_LABELS_T2}
+
+summary_t2 = pd.DataFrame([
+    {
+        'pattern': f'{s}→T2',
+        '単勝_n': len(pat_tan_t2[s]),
+        '単勝_的中': int(pat_tan_t2[s]['hit'].sum()) if not pat_tan_t2[s].empty else 0,
+        '単勝_的中率(%)': (round(pat_tan_t2[s]['hit'].mean() * 100, 2)
+                          if not pat_tan_t2[s].empty else np.nan),
+        '馬連_n': len(pat_uma_t2[s]),
+        '馬連_的中': int(pat_uma_t2[s]['hit'].sum()) if not pat_uma_t2[s].empty else 0,
+        '馬連_的中率(%)': (round(pat_uma_t2[s]['hit'].mean() * 100, 2)
+                          if not pat_uma_t2[s].empty else np.nan),
+    }
+    for s in START_LABELS_T2
+])
+print('=== TXX → T-2 各パターンの母数 ===')
+display(summary_t2)
+
+# 閾値スイープ + best_thresholds
+sweep_tan_t2 = {s: threshold_sweep(pat_tan_t2[s], THRESHOLDS) for s in START_LABELS_T2}
+sweep_uma_t2 = {s: threshold_sweep(pat_uma_t2[s], THRESHOLDS) for s in START_LABELS_T2}
+
+bt_tan_t2 = best_thresholds(sweep_tan_t2, min_n=MIN_N, end_label='T2')
+bt_uma_t2 = best_thresholds(sweep_uma_t2, min_n=MIN_N, end_label='T2')
+print(f'=== 単勝: パターン別 最適閾値 (T-2 終端, min_n={MIN_N}) ===')
+display(_style_best(bt_tan_t2))
+print(f'=== 馬連: パターン別 最適閾値 (T-2 終端, min_n={MIN_N}) ===')
+display(_style_best(bt_uma_t2))
+
+# 可視化
+plot_sweep_with_labels(sweep_tan_t2, START_LABELS_T2, '単勝', 'T2', min_n=MIN_N)
+plot_sweep_with_labels(sweep_uma_t2, START_LABELS_T2, '馬連', 'T2', min_n=MIN_N)
+""")
+
+# ─────────────────────────────────────────────────────────────────────────────
+md("""
+## 9. T-3 / T-2 / T-1 終端 3-way 比較
+
+同じ start_label について、終端を T-3 / T-2 / T-1 にしたときの **最適 P/L 時点での回収率・母数** を並べる。
+- 終端を後ろにずらす (= 直前情報を多く使う) ほどシグナル精度が上がるか?
+- T-2 は自動投票の現実的な締切点。T-3 から T-2 への改善が大きければ T-2 終端で運用する価値あり
+""")
+
+# ─────────────────────────────────────────────────────────────────────────────
+code("""
+def compare_endpoints_3way(bt_t3: pd.DataFrame, bt_t2: pd.DataFrame, bt_t1: pd.DataFrame) -> pd.DataFrame:
+    '''start_label をキーにして T-3 / T-2 / T-1 終端を 3 列横並びで比較.'''
+    def _start(p): return p.split('→')[0]
+    def _index(df): return df.assign(start=df['pattern'].apply(_start)).set_index('start') if not df.empty else df
+
+    t3, t2, t1 = _index(bt_t3), _index(bt_t2), _index(bt_t1)
+    starts = sorted(set(t3.index) | set(t2.index) | set(t1.index),
                     key=lambda s: int(s.lstrip('T')), reverse=True)
     rows = []
     for s in starts:
-        r3 = t3.loc[s] if s in t3.index else None
-        r1 = t1.loc[s] if s in t1.index else None
-        rows.append({
-            'start': s,
-            'T3:閾値(%)':    r3['[PL最大] 閾値(%)']   if r3 is not None else np.nan,
-            'T3:母数':        int(r3['[PL最大] 母数']) if r3 is not None else 0,
-            'T3:回収率(%)':  r3['[PL最大] 回収率(%)'] if r3 is not None else np.nan,
-            'T3:P/L(¥)':     int(r3['[PL最大] P/L(¥)']) if r3 is not None else 0,
-            'T1:閾値(%)':    r1['[PL最大] 閾値(%)']   if r1 is not None else np.nan,
-            'T1:母数':        int(r1['[PL最大] 母数']) if r1 is not None else 0,
-            'T1:回収率(%)':  r1['[PL最大] 回収率(%)'] if r1 is not None else np.nan,
-            'T1:P/L(¥)':     int(r1['[PL最大] P/L(¥)']) if r1 is not None else 0,
-        })
-    out = pd.DataFrame(rows)
-    out['Δ 回収率(pp)']  = (out['T1:回収率(%)'] - out['T3:回収率(%)']).round(1)
-    out['Δ P/L(¥)']     = out['T1:P/L(¥)']   - out['T3:P/L(¥)']
-    return out
+        row = {'start': s}
+        for tag, src in [('T3', t3), ('T2', t2), ('T1', t1)]:
+            if s in src.index:
+                row[f'{tag}:閾値(%)']  = src.loc[s, '[PL最大] 閾値(%)']
+                row[f'{tag}:母数']     = int(src.loc[s, '[PL最大] 母数'])
+                row[f'{tag}:回収率(%)']= src.loc[s, '[PL最大] 回収率(%)']
+                row[f'{tag}:P/L(¥)']  = int(src.loc[s, '[PL最大] P/L(¥)'])
+            else:
+                row[f'{tag}:閾値(%)']  = np.nan
+                row[f'{tag}:母数']     = 0
+                row[f'{tag}:回収率(%)']= np.nan
+                row[f'{tag}:P/L(¥)']  = 0
+        # T3→T2 / T3→T1 改善幅
+        row['Δ(T2-T3) 回収率(pp)'] = round(row['T2:回収率(%)'] - row['T3:回収率(%)'], 1) if not (pd.isna(row['T2:回収率(%)']) or pd.isna(row['T3:回収率(%)'])) else np.nan
+        row['Δ(T2-T3) P/L(¥)']    = row['T2:P/L(¥)']   - row['T3:P/L(¥)']
+        row['Δ(T1-T3) 回収率(pp)'] = round(row['T1:回収率(%)'] - row['T3:回収率(%)'], 1) if not (pd.isna(row['T1:回収率(%)']) or pd.isna(row['T3:回収率(%)'])) else np.nan
+        row['Δ(T1-T3) P/L(¥)']    = row['T1:P/L(¥)']   - row['T3:P/L(¥)']
+        rows.append(row)
+    return pd.DataFrame(rows)
 
 
-def _style_compare(df: pd.DataFrame):
+def _style_compare_3way(df: pd.DataFrame):
     def color_delta(v):
         if pd.isna(v): return ''
         if v > 0: return 'background-color:#66bb6a;color:#000'
         if v < 0: return 'background-color:#ef9a9a;color:#000'
         return ''
+    delta_cols = ['Δ(T2-T3) 回収率(pp)', 'Δ(T2-T3) P/L(¥)',
+                  'Δ(T1-T3) 回収率(pp)', 'Δ(T1-T3) P/L(¥)']
     return (df.style
-              .map(color_delta, subset=['Δ 回収率(pp)', 'Δ P/L(¥)'])
-              .format({'T3:P/L(¥)': '{:,.0f}', 'T1:P/L(¥)': '{:,.0f}',
-                       'Δ P/L(¥)': '{:+,.0f}'}))
+              .map(color_delta, subset=delta_cols)
+              .format({'T3:P/L(¥)': '{:,.0f}', 'T2:P/L(¥)': '{:,.0f}', 'T1:P/L(¥)': '{:,.0f}',
+                       'Δ(T2-T3) P/L(¥)': '{:+,.0f}', 'Δ(T1-T3) P/L(¥)': '{:+,.0f}'}))
 
 
-cmp_tan = compare_endpoints(bt_tan, bt_tan_t1, '単勝')
-cmp_uma = compare_endpoints(bt_uma, bt_uma_t1, '馬連')
-print('=== 単勝: 最適 P/L 時点での T-3 vs T-1 比較 ===')
-display(_style_compare(cmp_tan))
-print('=== 馬連: 最適 P/L 時点での T-3 vs T-1 比較 ===')
-display(_style_compare(cmp_uma))
+cmp_tan = compare_endpoints_3way(bt_tan, bt_tan_t2, bt_tan_t1)
+cmp_uma = compare_endpoints_3way(bt_uma, bt_uma_t2, bt_uma_t1)
+print('=== 単勝: 最適 P/L 時点での T-3 / T-2 / T-1 終端 3-way 比較 ===')
+display(_style_compare_3way(cmp_tan))
+print('=== 馬連: 最適 P/L 時点での T-3 / T-2 / T-1 終端 3-way 比較 ===')
+display(_style_compare_3way(cmp_uma))
 """)
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -1186,8 +1240,8 @@ md("""
 - セクション 5: 勝ち馬と非勝ち馬の単勝オッズ推移比較
 - セクション 6: TXX → T-3 全パターン (T-60/T-30/T-15/T-10/T-5) × 単勝・馬連 の 10 区分集計
 - セクション 7: 閾値スイープ (T-3 終端) — 回収率・累積 P/L が最大になる下落率閾値の探索
-- セクション 8: TXX → T-1 全パターン (T-60/T-30/T-15/T-10/T-5/T-3) × 同様の集計
-- セクション 9: T-3 終端 vs T-1 終端 比較 — 終端を最後まで引き寄せたときの ROI/PL 改善幅
+- セクション 8: TXX → T-1 / T-2 全パターン (T-60/T-30/T-15/T-10/T-5/T-3) × 同様の集計
+- セクション 9: T-3 / T-2 / T-1 終端 3-way 比較 — 終端を最後まで引き寄せたときの ROI/PL 改善幅
 - セクション 10: 自動購入を前提とした実運用の制約と次のアクション
 
 > サンプル数が少ない (3 日分) ため、回収率・的中率の数値は参考値。
