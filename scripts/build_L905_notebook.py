@@ -44,8 +44,8 @@ gitignore 済みなので機密情報はリポジトリに入らない。
 |---|---|---|
 | `thresholds.T_START` | T10 | 比較元 T-label |
 | `thresholds.T_END` | T3 | 比較先 T-label (= 発火タイミング) |
-| `thresholds.tan_change_rate_max` | -40.0 | 単勝の change_rate(%) 上限 (これ以下で買う) |
-| `thresholds.uma_change_rate_max` | -50.0 | 馬連の change_rate(%) 上限 (これ以下で買う) |
+| `thresholds.tan_change_rate_max` | -30.0 | 単勝の change_rate(%) 上限 (これ以下で買う) — #L909 集計の最適 -32% / 期待回収率 138% を踏まえた暫定 |
+| `thresholds.uma_change_rate_max` | -30.0 | 馬連の change_rate(%) 上限 (これ以下で買う) — #L909 集計の最適 -32% / 期待回収率 193% を踏まえた暫定 |
 | `betting.stake_yen` | 100 | 1 買い目あたりの賭け金 |
 | `betting.dry_run` | true | 投票を確定しない (ログ出力のみ) |
 | `betting.max_bets_per_race_tan` | 1 | 単勝の 1 レースあたり最大買い目数 (下落率最大のものを残す) |
