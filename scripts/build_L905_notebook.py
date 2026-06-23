@@ -54,7 +54,7 @@ gitignore 済みなので機密情報はリポジトリに入らない。
 | `betting.min_odds_to_buy` | 1.5 | この単勝オッズ未満は買わない |
 | `betting.max_odds_to_buy` | 2000.0 | この単勝オッズ超過は買わない |
 | `operation.poll_interval_sec` | 10 | スナップショット監視ポーリング間隔 |
-| `operation.data_root` | (自動検出) | データルート。指定パスが実在しない場合は G:/マイドライブ/ → D:/ → C:/ を順に試す。`NAR_DATA_ROOT` 環境変数で最優先指定可能 |
+| `operation.data_root` | (自動検出, 最低優先) | データルート。G:/マイドライブ/ → D:/ → C:/ の順に **実在チェック** で自動採用 (= サブPC では config を無視して G ドライブを選ぶ)。明示指定したい場合は `NAR_DATA_ROOT` 環境変数 |
 
 ## ⚠ 安全運用
 - **DRY-RUN がデフォルト**。`dry_run: false` に手動切替するまで投票は確定されない
@@ -109,22 +109,22 @@ MAX_TOTAL_BETS_PER_DAY = config['betting']['max_total_bets_per_day']
 MIN_ODDS_TO_BUY        = config['betting']['min_odds_to_buy']
 MAX_ODDS_TO_BUY        = config['betting']['max_odds_to_buy']
 
-# 運用設定 — data_root はサブPC (G ドライブ) / メインPC (D ドライブ) を自動検出
+# 運用設定 — data_root はマシン環境を自動判定
 def _resolve_data_root() -> Path:
     \"\"\"NAR データルートを解決。優先順:
-    1. 環境変数 NAR_DATA_ROOT
-    2. config.operation.data_root (絶対パス指定があり、かつ実在する場合)
-    3. G:/マイドライブ/workspace/nar/data (サブPC: Google Drive 同期)
-    4. D:/workspace/nar/data (メインPC: SSD)
-    5. C:/Users/ppny9/workspace/nar/data (fallback)
+    1. 環境変数 NAR_DATA_ROOT (最優先、明示指定)
+    2. G:/マイドライブ/workspace/nar/data があれば → サブPC と判定
+    3. D:/workspace/nar/data があれば → メインPC と判定
+    4. C:/Users/ppny9/workspace/nar/data
+    5. config.operation.data_root (上記いずれも存在しない場合の fallback)
+
+    サブPC では config に D ドライブのパスが書かれていても **無視して G ドライブを採用** する。
+    意図的に D ドライブを参照したい場合は環境変数 NAR_DATA_ROOT で明示指定する。
     \"\"\"
     import os as _os
     env = _os.environ.get('NAR_DATA_ROOT', '')
     if env and Path(env).is_dir():
         return Path(env)
-    cfg_root = config.get('operation', {}).get('data_root', '')
-    if cfg_root and Path(cfg_root).is_dir():
-        return Path(cfg_root)
     for p in [
         'G:/マイドライブ/workspace/nar/data',
         'D:/workspace/nar/data',
@@ -132,8 +132,7 @@ def _resolve_data_root() -> Path:
     ]:
         if Path(p).is_dir():
             return Path(p)
-    # 何も見つからない → config 指定 or default
-    return Path(cfg_root or 'D:/workspace/nar/data')
+    return Path(config.get('operation', {}).get('data_root', 'D:/workspace/nar/data'))
 
 
 DATA_ROOT          = _resolve_data_root()
