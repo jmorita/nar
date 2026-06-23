@@ -1,0 +1,29 @@
+{
+  "_comment": "L905 自動投票の設定 (閾値・上限・運用)。本ファイルは git 管理されサブPCへ pull で同期される。認証情報は spat4_credentials.json (gitignored) に分離。",
+
+  "thresholds": {
+    "_comment": "T_START → T_END の change_rate (%) がこの値以下なら買う (= 下落シグナル)",
+    "T_START": "T10",
+    "T_END": "T3",
+    "tan_change_rate_max": -30.0,
+    "uma_change_rate_max": -30.0
+  },
+
+  "betting": {
+    "_comment": "stake_yen は 1 買い目あたりの賭け金 (100 円単位)",
+    "stake_yen": 100,
+    "dry_run": true,
+    "max_bets_per_race_tan": 1,
+    "max_bets_per_race_uma": 10,
+    "max_total_bets_per_day": 500,
+    "min_odds_to_buy": 1.5,
+    "max_odds_to_buy": 2000.0
+  },
+
+  "operation": {
+    "_comment_data_root": "data_root は環境変数 NAR_DATA_ROOT > G:/マイドライブ/... > D:/... > C:/... の順で自動検出。本指定は fallback。",
+    "data_root": "D:/workspace/nar/data",
+    "poll_interval_sec": 10,
+    "log_dir": "logs/"
+  }
+}
