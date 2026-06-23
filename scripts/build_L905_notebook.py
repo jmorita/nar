@@ -48,10 +48,11 @@ gitignore 済みなので機密情報はリポジトリに入らない。
 | `thresholds.uma_change_rate_max` | -50.0 | 馬連の change_rate(%) 上限 (これ以下で買う) |
 | `betting.stake_yen` | 100 | 1 買い目あたりの賭け金 |
 | `betting.dry_run` | true | 投票を確定しない (ログ出力のみ) |
-| `betting.max_bets_per_race` | 5 | 1 レースあたりの最大買い目数 |
-| `betting.max_total_bets_per_day` | 50 | 1 日累計上限 |
+| `betting.max_bets_per_race_tan` | 1 | 単勝の 1 レースあたり最大買い目数 (下落率最大のものを残す) |
+| `betting.max_bets_per_race_uma` | 10 | 馬連の 1 レースあたり最大買い目数 (下落率最大のものを残す) |
+| `betting.max_total_bets_per_day` | 500 | 1 日累計上限 |
 | `betting.min_odds_to_buy` | 1.5 | この単勝オッズ未満は買わない |
-| `betting.max_odds_to_buy` | 100.0 | この単勝オッズ超過は買わない |
+| `betting.max_odds_to_buy` | 2000.0 | この単勝オッズ超過は買わない |
 | `operation.poll_interval_sec` | 10 | スナップショット監視ポーリング間隔 |
 | `operation.data_root` | D:/workspace/nar/data | データルート |
 
@@ -101,7 +102,8 @@ UMA_CHANGE_RATE_MAX = config['thresholds']['uma_change_rate_max']
 # 投票設定
 STAKE_YEN              = config['betting']['stake_yen']
 DRY_RUN                = config['betting']['dry_run']
-MAX_BETS_PER_RACE      = config['betting']['max_bets_per_race']
+MAX_BETS_PER_RACE_TAN  = config['betting']['max_bets_per_race_tan']
+MAX_BETS_PER_RACE_UMA  = config['betting']['max_bets_per_race_uma']
 MAX_TOTAL_BETS_PER_DAY = config['betting']['max_total_bets_per_day']
 MIN_ODDS_TO_BUY        = config['betting']['min_odds_to_buy']
 MAX_ODDS_TO_BUY        = config['betting']['max_odds_to_buy']
@@ -117,7 +119,9 @@ SNAPSHOT_DIR = DATA_ROOT / 'odds_snapshots'
 print(f'CONFIG_PATH: {CONFIG_PATH}')
 print(f'T_START → T_END: {T_START} → {T_END}')
 print(f'閾値: 単勝 ≤ {TAN_CHANGE_RATE_MAX}% / 馬連 ≤ {UMA_CHANGE_RATE_MAX}%')
-print(f'STAKE: {STAKE_YEN}円  /  DRY_RUN: {DRY_RUN}  /  上限: {MAX_BETS_PER_RACE}/race {MAX_TOTAL_BETS_PER_DAY}/day')
+print(f'STAKE: {STAKE_YEN}円  /  DRY_RUN: {DRY_RUN}')
+print(f'上限: 単勝{MAX_BETS_PER_RACE_TAN}点/race  馬連{MAX_BETS_PER_RACE_UMA}点/race  累計{MAX_TOTAL_BETS_PER_DAY}/day')
+print(f'オッズ範囲フィルタ (単勝): {MIN_ODDS_TO_BUY} 〜 {MAX_ODDS_TO_BUY}')
 print(f'監視dir: {SNAPSHOT_DIR}')
 """)
 
@@ -281,9 +285,16 @@ daily_counter = DailyBetCounter(MAX_TOTAL_BETS_PER_DAY)
 
 
 def execute_bets_for_race(sess: spat4.Spat4Session, driver, race_info: dict, signals: dict):
-    \"\"\"1 レース分のシグナルから実際の投票呼出し。\"\"\"
-    tan_bets = signals['tan_bets'][:MAX_BETS_PER_RACE]
-    uma_bets = signals['uma_bets'][:MAX_BETS_PER_RACE]
+    \"\"\"1 レース分のシグナルから実際の投票呼出し。
+
+    change_rate が小さいもの (= 下落率が大きいもの) から優先して採用し、
+    kind ごとに max_bets_per_race_* で打ち切る。
+    \"\"\"
+    # change_rate 昇順 (最も負 = 下落率最大 が先頭) でソート
+    tan_sorted = sorted(signals['tan_bets'], key=lambda b: b['change_rate'])
+    uma_sorted = sorted(signals['uma_bets'], key=lambda b: b['change_rate'])
+    tan_bets = tan_sorted[:MAX_BETS_PER_RACE_TAN]
+    uma_bets = uma_sorted[:MAX_BETS_PER_RACE_UMA]
 
     total_to_bet = len(tan_bets) + len(uma_bets)
     if total_to_bet == 0:
