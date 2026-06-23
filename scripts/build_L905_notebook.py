@@ -54,7 +54,7 @@ gitignore 済みなので機密情報はリポジトリに入らない。
 | `betting.min_odds_to_buy` | 1.5 | この単勝オッズ未満は買わない |
 | `betting.max_odds_to_buy` | 2000.0 | この単勝オッズ超過は買わない |
 | `operation.poll_interval_sec` | 10 | スナップショット監視ポーリング間隔 |
-| `operation.data_root` | D:/workspace/nar/data | データルート |
+| `operation.data_root` | (自動検出) | データルート。指定パスが実在しない場合は G:/マイドライブ/ → D:/ → C:/ を順に試す。`NAR_DATA_ROOT` 環境変数で最優先指定可能 |
 
 ## ⚠ 安全運用
 - **DRY-RUN がデフォルト**。`dry_run: false` に手動切替するまで投票は確定されない
@@ -109,8 +109,34 @@ MAX_TOTAL_BETS_PER_DAY = config['betting']['max_total_bets_per_day']
 MIN_ODDS_TO_BUY        = config['betting']['min_odds_to_buy']
 MAX_ODDS_TO_BUY        = config['betting']['max_odds_to_buy']
 
-# 運用設定
-DATA_ROOT          = Path(config['operation']['data_root'])
+# 運用設定 — data_root はサブPC (G ドライブ) / メインPC (D ドライブ) を自動検出
+def _resolve_data_root() -> Path:
+    \"\"\"NAR データルートを解決。優先順:
+    1. 環境変数 NAR_DATA_ROOT
+    2. config.operation.data_root (絶対パス指定があり、かつ実在する場合)
+    3. G:/マイドライブ/workspace/nar/data (サブPC: Google Drive 同期)
+    4. D:/workspace/nar/data (メインPC: SSD)
+    5. C:/Users/ppny9/workspace/nar/data (fallback)
+    \"\"\"
+    import os as _os
+    env = _os.environ.get('NAR_DATA_ROOT', '')
+    if env and Path(env).is_dir():
+        return Path(env)
+    cfg_root = config.get('operation', {}).get('data_root', '')
+    if cfg_root and Path(cfg_root).is_dir():
+        return Path(cfg_root)
+    for p in [
+        'G:/マイドライブ/workspace/nar/data',
+        'D:/workspace/nar/data',
+        'C:/Users/ppny9/workspace/nar/data',
+    ]:
+        if Path(p).is_dir():
+            return Path(p)
+    # 何も見つからない → config 指定 or default
+    return Path(cfg_root or 'D:/workspace/nar/data')
+
+
+DATA_ROOT          = _resolve_data_root()
 POLL_INTERVAL_SEC  = config['operation']['poll_interval_sec']
 LOG_DIR            = Path('C:/Users/ppny9/workspace/nar') / config['operation'].get('log_dir', 'logs/')
 LOG_DIR.mkdir(parents=True, exist_ok=True)
