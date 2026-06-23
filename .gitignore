@@ -32,3 +32,8 @@ scripts/old/
 # 環境変数 / 認証情報
 .env
 credentials.json
+config/spat4_credentials.json
+config/*.local.json
+
+# SPAT4 サンプル HTML (リファレンス用、リポジトリには含めない)
+spat4_html_sample/
