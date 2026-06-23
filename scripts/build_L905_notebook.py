@@ -142,6 +142,22 @@ LOG_DIR.mkdir(parents=True, exist_ok=True)
 
 SNAPSHOT_DIR = DATA_ROOT / 'odds_snapshots'
 
+# ── メール通知用の環境変数を config から展開 (JRA #J905 と同一 Gmail を使用) ──
+_email = config.get('email', {})
+if _email.get('from') and _email.get('app_pw') and _email.get('to'):
+    os.environ.setdefault('NOTIFY_SMTP_USER', _email['from'])
+    os.environ.setdefault('NOTIFY_SMTP_PASS', _email['app_pw'])
+    os.environ.setdefault('NOTIFY_EMAIL_TO',  _email['to'])
+    os.environ.setdefault('NOTIFY_SMTP_HOST', _email.get('smtp_host', 'smtp.gmail.com'))
+    os.environ.setdefault('NOTIFY_SMTP_PORT', str(_email.get('smtp_port', 465)))
+    print(f'メール通知: {_email["from"]} → {_email["to"]} (config から自動展開)')
+else:
+    # config に未設定なら既存の OS 環境変数を尊重 (なければ送信スキップ)
+    if os.environ.get('NOTIFY_EMAIL_TO'):
+        print(f'メール通知: OS 環境変数 NOTIFY_EMAIL_TO={os.environ["NOTIFY_EMAIL_TO"]} を使用')
+    else:
+        print(f'メール通知: 環境変数未設定 — 送信スキップ')
+
 print(f'CONFIG_PATH: {CONFIG_PATH}')
 print(f'T_START → T_END: {T_START} → {T_END}')
 print(f'閾値: 単勝 ≤ {TAN_CHANGE_RATE_MAX}% / 馬連 ≤ {UMA_CHANGE_RATE_MAX}%')

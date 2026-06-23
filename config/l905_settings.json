@@ -12,7 +12,9 @@
   "betting": {
     "_comment": "stake_yen は 1 買い目あたりの賭け金 (100 円単位)",
     "stake_yen": 100,
-    "dry_run": true,
+    "dry_run": false,
+    "safety_mode": true,
+    "_comment_safety_mode": "safety_mode=true なら SPAT4 ナビゲーション + フォーム入力まで実行 → **最終 投票確定ボタンは押さず 60 秒停止**。初回 LIVE はこのモードで動作確認すること。フル自動にするなら false に変更。",
     "max_bets_per_race_tan": 1,
     "max_bets_per_race_uma": 10,
     "max_total_bets_per_day": 500,
