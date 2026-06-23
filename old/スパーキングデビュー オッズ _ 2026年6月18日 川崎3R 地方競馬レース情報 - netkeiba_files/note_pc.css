@@ -1,0 +1,1260 @@
+@charset "UTF-8";
+/* コンテンツここから */
+/*---------------------------
+  0.共通
+  1.レースTOP
+    1.1 開催レース一覧
+    1.2 お気に入り＆メモ馬の出走情報
+  2.出馬表 shutuba.html
+  3.出馬表 メモ機能 note_past5.html  
+  4.レース別メモ 
+    4.1 レーステーブル .NoteTable_Container
+    4.2 登録モーダル  .MemoInputModal
+    4.3 レース別メモ 記入フォーム
+  ---------------------------*/
+/*======================================
+0.共通
+======================================*/
+.NoteLabel {
+  padding: 5px 8px;
+  border-radius: 1em;
+  font-weight: bold;
+  color: #fff;
+  text-align: center;
+  font-size: 0.6875rem;
+  line-height: 1;
+}
+.NoteLabel.bk01 {
+  background-color: #699EE6;
+}
+.NoteLabel.bk02 {
+  background-color: #E6918F;
+}
+.NoteLabel.bk03 {
+  background-color: #6A7291;
+}
+
+.NoteIcon {
+  position: absolute;
+  display: block;
+  width: 22px;
+  height: 22px;
+  line-height: 0;
+  font-size: 0;
+  border-radius: 50%;
+  background-color: #CACACA;
+  color: transparent;
+  padding: 0;
+  border: none;
+  outline: none;
+  z-index: 10;
+  padding: 0;
+  cursor: pointer;
+  pointer-events: none;
+}
+.NoteIcon::before {
+  content: "";
+  display: block;
+  position: absolute;
+  top: 0px;
+  bottom: 0;
+  right: 2px;
+  transform: rotate(45deg);
+  left: 0;
+  margin: auto;
+  width: 6px;
+  height: 6px;
+  border-top: 2px solid #fff;
+  border-right: 2px solid #fff;
+  background: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.New_Comment .NoteIcon::before, .New_Comment .NoteIcon::after {
+  content: "";
+  display: inline-block;
+  position: absolute;
+  width: 2px;
+  height: 12px;
+  background-color: #fff;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  left: 0;
+  margin: auto;
+}
+.New_Comment .NoteIcon::before {
+  transform: inherit;
+  border-top: none;
+  border-right: none;
+}
+.New_Comment .NoteIcon::after {
+  transform: rotate(90deg);
+}
+
+/*======================================
+1. レースTOP
+======================================*/
+/* ========== 開催レース一覧 ======== */
+.RaceList_DataItem .RaceList_ItemSubscribe .Note_Icon {
+  width: 13px;
+}
+
+.RaceList_DataItem .RaceList_ItemSubscribe .FavHorse_Icon {
+  width: 13px;
+}
+
+/* ========== お気に入り＆メモ馬の出走情報 ======== */
+table.Table_Horse_Bookmark th {
+  position: relative;
+}
+
+#HorseBookmark_Box_v3 table.Table_Horse_Bookmark td:nth-child(1) {
+  max-width: inherit;
+  width: 160px;
+}
+
+table.Table_Horse_Bookmark th .Change_Btn {
+  display: inline-block;
+  float: right;
+}
+
+table.Table_Horse_Bookmark th.Note0,
+table.Table_Horse_Bookmark th.Note1 {
+  min-width: 190px;
+}
+
+table.Table_Horse_Bookmark th.Note0 span,
+table.Table_Horse_Bookmark th.Note1 span {
+  line-height: 1;
+  display: inline-block;
+  vertical-align: bottom;
+}
+
+table.Table_Horse_Bookmark td {
+  position: relative;
+}
+
+table.Table_Horse_Bookmark td .IconWrap {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  right: 6px;
+}
+
+table.Table_Horse_Bookmark td .NoteLabel_Inner {
+  display: block;
+}
+
+table.Table_Horse_Bookmark td .bk01,
+table.Table_Horse_Bookmark td .bk02,
+table.Table_Horse_Bookmark td .bk03 {
+  display: inline-block;
+  margin-right: 5px;
+  margin-bottom: 5px;
+  padding: 5px 8px;
+  border-radius: 1em;
+  font-weight: bold;
+  color: #fff;
+  text-align: center;
+  font-size: 0.625rem;
+  line-height: 1;
+}
+
+table.Table_Horse_Bookmark td .bk01 {
+  background-color: #699EE6;
+}
+
+table.Table_Horse_Bookmark td .bk02 {
+  background-color: #E6918F;
+}
+
+table.Table_Horse_Bookmark td .bk03 {
+  background-color: #6A7291;
+}
+
+/*-- 切り替えボタン --*/
+.Change_Btn {
+  position: relative;
+  width: 63px;
+  padding-left: 17px;
+  box-sizing: border-box;
+  background: #FAF9F5;
+  border: solid 1px #D9D8CF;
+  border-radius: 2px;
+  cursor: pointer;
+  color: #444;
+  font-size: 12px;
+}
+
+.Change_Btn::before {
+  display: block;
+  content: "";
+  position: absolute;
+  top: 10px;
+  left: 7px;
+  transform: translateY(-50%);
+  width: 15px;
+  height: 13px;
+  background-repeat: no-repeat;
+  background-size: 150px auto;
+  background-image: url(../img/icon/icon_sprite_race_nk01.png);
+  background-position: -95px 1px;
+}
+
+/*======================================
+2.出馬表 shutuba.html
+======================================*/
+table.RaceTable01 tr.HorseList .FavMemo {
+  width: 45px;
+  min-width: 45px;
+}
+
+table.RaceTable01 tr.Header th.Memo {
+  min-width: 300px;
+}
+
+table.RaceTable01 tr.Header th.Memo .tablesorter-header-inner {
+  font-weight: bold;
+}
+
+table.RaceTable01 tr.Header th.Memo .Change_Btn {
+  margin-left: 8px;
+}
+
+table.RaceTable01 tr.HorseList td[class^=Note] {
+  position: relative;
+  padding: 3px 20px 3px 6px;
+  cursor: pointer;
+  max-width: 300px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+table.RaceTable01 tr.HorseList td[class^=Note]:hover {
+  white-space: normal;
+}
+
+table.RaceTable01 tr.HorseList td[class^=Note]:hover a {
+  padding: 3px 21px 3px 6px;
+  text-decoration: none;
+}
+
+table.RaceTable01 tr.HorseList [class^=Note] a {
+  display: block;
+  padding: 3px 6px 3px 6px;
+  width: 100%;
+  height: 100%;
+  color: #444444;
+}
+
+table.RaceTable01 tr.HorseList td .bk01,
+table.RaceTable01 tr.HorseList td .bk02,
+table.RaceTable01 tr.HorseList td .bk03 {
+  display: inline-block;
+  margin-right: 5px;
+  margin-bottom: 3px;
+  padding: 5px 7px;
+  border-radius: 1em;
+  font-weight: bold;
+  color: #fff;
+  text-align: center;
+  font-size: 0.625rem;
+  line-height: 1;
+  vertical-align: middle;
+}
+
+table.RaceTable01 tr.HorseList td .bk01 {
+  background-color: #699EE6;
+}
+
+table.RaceTable01 tr.HorseList td .bk02 {
+  background-color: #E6918F;
+}
+
+table.RaceTable01 tr.HorseList td .bk03 {
+  background-color: #6A7291;
+}
+
+table.RaceTable01 tr.HorseList [class^=Note] .NoteIcon {
+  width: 16px;
+  height: 16px;
+  top: 0;
+  bottom: 0;
+  margin: auto;
+  right: 5px;
+}
+
+table.RaceTable01 tr.HorseList [class^=Note] .New_Comment .NoteIcon::before,
+table.RaceTable01 tr.HorseList [class^=Note] .New_Comment .NoteIcon::after {
+  height: 8px;
+}
+
+table.RaceTable01 tr.HorseList .Note1 .New_Comment {
+  pointer-events: none;
+}
+
+table.RaceTable01 tr.HorseList .Note1:has(.New_Comment) {
+  pointer-events: none;
+}
+
+table.RaceTable01 tr.HorseList .Note1 .New_Comment .NoteIcon {
+  display: none;
+}
+
+/*======================================
+3.出馬表 メモ機能 note_past5.html
+======================================*/
+.Shutuba_Note_Table {
+  border-right: 1px solid #d9d8ce;
+  height: 100%;
+  font-family: "ヒラギノ角ゴ ProN W3", "Hiragino Kaku Gothic ProN", arial, "Meiryo", "メイリオ", sans-serif;
+  white-space: nowrap;
+}
+
+.Shutuba_Note_Table .Horse_Comment {
+  position: relative;
+}
+.Shutuba_Note_Table .Horse_Comment::before {
+  content: "";
+  border-bottom: 1.6em solid transparent;
+  border-right: 1.6em solid #D6FFA2;
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 2;
+}
+.Shutuba_Note_Table .Horse_Comment .NoteIcon {
+  bottom: 5px;
+  right: 8px;
+}
+.Shutuba_Note_Table .Horse_Comment.New_Comment::before {
+  content: none;
+}
+.Shutuba_Note_Table .Horse_Comment.New_Comment .Horse_Comment_Text {
+  color: #DADADA;
+  text-indent: inherit;
+}
+.Shutuba_Note_Table .Horse_Comment.New_Comment .Horse_Comment_Text::before {
+  content: none;
+}
+.Shutuba_Note_Table .Horse_Comment a {
+  display: block;
+  height: 100%;
+  padding: 5px 8px 5px 8px;
+}
+.Shutuba_Note_Table .Horse_Comment .Horse_Comment_Text {
+  position: relative;
+  line-height: 1.44;
+  font-size: 0.9375rem;
+  color: #444;
+  white-space: initial;
+  text-indent: 1.1em;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 5;
+  overflow-wrap: break-word;
+}
+.Shutuba_Note_Table .Horse_Comment .Horse_Comment_Text::before {
+  background: url("../img/icon/icon_note.png") no-repeat;
+  content: "";
+  display: block;
+  width: 13px;
+  height: 16px;
+  position: absolute;
+  background-size: contain;
+  top: 2%;
+  left: 0;
+}
+
+/*出馬表*/
+.Shutuba_Note_Table .HorseList > dd {
+  text-align: left;
+}
+.Shutuba_Note_Table .Horse_Info .Icon_Note {
+  display: inline-block;
+  margin-bottom: 10px;
+}
+.Shutuba_Note_Table .Horse_Info .Horse02 a {
+  font-size: 1rem;
+  font-weight: 600;
+}
+.Shutuba_Note_Table .Horse_Info .Horse07 {
+  margin-top: 10px;
+  display: flex !important;
+  justify-content: space-between;
+}
+.Shutuba_Note_Table .Horse_Info .Weight {
+  font-size: 0.6875rem;
+  color: #777;
+}
+.Shutuba_Note_Table .Horse_Info .Popular {
+  font-size: 0.75rem;
+  color: #555;
+  font-weight: 600;
+}
+.Shutuba_Note_Table .Horse_Info .Mark {
+  display: inline-block;
+  font-size: 13px;
+  color: #fff;
+  background: #111;
+  border-radius: 50%;
+  text-align: center;
+  margin-left: 2px;
+  line-height: 17px;
+  width: 17px;
+  height: 17px;
+  position: relative;
+  top: -1px;
+}
+.Shutuba_Note_Table .Race_Note {
+  position: relative;
+  padding: 6px 7px;
+  text-align: left;
+}
+.Shutuba_Note_Table .Race_Note.DataLine_Now::after {
+  background: #555;
+  content: "";
+  display: block;
+  width: 3px;
+  height: 90%;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  right: 0;
+}
+.Shutuba_Note_Table .Race_Note .DataLine {
+  position: relative;
+}
+.Shutuba_Note_Table .Race_Note .Data01 {
+  margin-bottom: 5px;
+  display: block;
+  color: #666666;
+  font-size: 0.8125rem;
+}
+.Shutuba_Note_Table .Race_Note .Data02 {
+  display: inline-block;
+  margin-bottom: 5px;
+  margin-right: 5px;
+  color: #444444;
+  font-weight: 600;
+  font-size: 1rem;
+}
+.Shutuba_Note_Table .Race_Note .Data03 {
+  margin-bottom: 7px;
+  display: block;
+  color: #666666;
+  font-size: 0.8125rem;
+}
+.Shutuba_Note_Table .Race_Note .Data04 {
+  display: inline-block;
+}
+.Shutuba_Note_Table .Race_Note .Data04 .Num {
+  position: relative;
+  top: -2px;
+  display: inline-block;
+  background: #e3ebf0;
+  border: 1px solid #b2b2b2;
+  padding: 2px 0;
+  width: 36px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: bold;
+  color: #666666;
+}
+.Shutuba_Note_Table .Race_Note .Data04 .Num.Ranking_1 {
+  background: #ffef84 !important;
+  border: 1px solid #ccB834 !important;
+}
+.Shutuba_Note_Table .Race_Note .Data04 .Num.Ranking_2 {
+  background: #d8f6ff !important;
+  border: 1px solid #6aacce !important;
+}
+.Shutuba_Note_Table .Race_Note .Data04 .Num.Ranking_3 {
+  background: #ffd4d4 !important;
+  border: 1px solid #ff9494 !important;
+}
+.Shutuba_Note_Table .Race_Note .NoteLabel {
+  position: absolute;
+  right: 25px;
+  top: 3px;
+  padding: 4px 8px;
+  font-size: 0.625rem;
+}
+.Shutuba_Note_Table .Race_Note .Race_Note_Inner {
+  position: relative;
+  height: 45px;
+}
+.Shutuba_Note_Table .Race_Note .Race_Note_Inner::before {
+  content: "";
+  border-bottom: 1.6em solid transparent;
+  border-right: 1.6em solid #D6FFA2;
+  position: absolute;
+  top: 0;
+  right: 0;
+  margin-right: -7px;
+  margin-top: -67px;
+  z-index: 2;
+}
+.Shutuba_Note_Table .Race_Note .Race_Note_Inner.New_Comment::before {
+  content: none;
+}
+.Shutuba_Note_Table .Race_Note .Race_Note_Inner.New_Comment .Race_Note_Text {
+  color: #DADADA;
+  text-indent: initial;
+}
+.Shutuba_Note_Table .Race_Note .Race_Note_Inner.New_Comment .Race_Note_Text::before {
+  content: none;
+}
+.Shutuba_Note_Table .Race_Note .Race_Note_Inner a {
+  display: block;
+  height: 100%;
+  white-space: initial;
+}
+.Shutuba_Note_Table .Race_Note .Race_Note_Inner .NoteIcon {
+  bottom: -2px;
+  right: 0px;
+}
+.Shutuba_Note_Table .Race_Note .Race_Note_Text {
+  position: relative;
+  color: #444444;
+  line-height: 1.46;
+  font-size: 0.9375rem;
+  text-indent: 1.1em;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow-wrap: break-word;
+}
+.Shutuba_Note_Table .Race_Note .Race_Note_Text::before {
+  background: url("../img/icon/icon_note.png") no-repeat;
+  content: "";
+  display: block;
+  width: 13px;
+  height: 16px;
+  position: absolute;
+  background-size: contain;
+  top: 2%;
+  left: 0;
+}
+
+.Shutuba_Note_Table .HorseList .Rest {
+  line-height: 1.4;
+  min-width: 168px;
+}
+.Shutuba_Note_Table .HorseList .Rest > span {
+  margin: 0;
+  display: block;
+  line-height: 1.3;
+  font-size: 12px;
+}
+.Shutuba_Note_Table .HorseList .Rest > span:nth-child(1) {
+  white-space: normal;
+  font-size: 14px;
+}
+
+.Shutuba_Table .Cancel {
+  text-align: left;
+  background-color: #F3F3F3;
+}
+
+/*レース別馬メモ ラベルある時のアイコン・フラッグ処理*/
+.Shutuba_Note_Table .HorseList > td:has(.NoteLabel) .Race_Note_Inner::before {
+  content: "";
+}
+
+.Shutuba_Note_Table .HorseList > td:has(.NoteLabel) .Race_Note_Inner .Race_Note_Text::before {
+  content: "";
+}
+
+.Shutuba_Note_Table .HorseList > td:has(.NoteLabel) .Race_Note_Inner.New_Comment .Race_Note_Text {
+  text-indent: 1.1em;
+}
+
+/*-- pcテーブル用 --*/
+.Shutuba_Note_Table th {
+  padding: 5px 6px 6px 5px;
+  text-align: left;
+  vertical-align: bottom;
+  font-size: 0.8125rem;
+}
+
+.Shutuba_Note_Table th .Head {
+  display: block;
+  margin-bottom: 20px;
+  font-size: 0.9375rem;
+  font-weight: 300;
+}
+
+table.Shutuba_Note_Table tr.HorseList td.Horse_Info {
+  min-width: 176px;
+  max-width: 176px;
+  padding: 8px 4px;
+  vertical-align: middle;
+}
+
+table.Shutuba_Note_Table tr.HorseList td.Horse_Comment {
+  min-width: 168px;
+  max-width: 168px;
+}
+
+table.Shutuba_Note_Table tr.HorseList td.Race_Note {
+  min-width: 248px;
+}
+
+table.Shutuba_Note_Table tr.HorseList td {
+  vertical-align: top;
+  text-align: left;
+  font-weight: 300;
+  border-left: 1px solid #d9d8ce;
+  border-bottom: 1px solid #d9d8ce;
+}
+
+table.Shutuba_Note_Table th.CheckMark span {
+  display: block;
+  margin-bottom: 5px;
+  text-align: center;
+  font-weight: 300;
+}
+
+table.Shutuba_Note_Table th.CheckMark .BtnInput,
+table.Shutuba_Note_Table th.CheckMark .BtnInput .BtnInputLabel {
+  width: 100%;
+}
+
+.Shutuba_HorseList table.Shutuba_Note_Table tr.HorseList td.Horse_Select {
+  vertical-align: middle;
+  padding: 0 11px;
+}
+
+table.Shutuba_Note_Table .tzSelect,
+table.Shutuba_Note_Table .tzSelect .selectBox,
+table.Shutuba_Note_Table .HorseCheck_Select + label {
+  width: 37px !important;
+  height: 37px;
+  border-radius: 4px;
+}
+
+table.Shutuba_Note_Table .tzSelect .selectBox,
+.Shutuba_Note_Table .Selected .selectBox {
+  text-align: center;
+  font-size: 20px;
+  line-height: 35px;
+}
+
+table.Shutuba_Note_Table th.Waku,
+table.Shutuba_Note_Table th.Horse_Info {
+  vertical-align: middle;
+  font-weight: 300;
+}
+
+table.Shutuba_Note_Table tr.HorseList td[class*=Waku] {
+  text-align: center;
+  vertical-align: middle;
+  font-size: 12px;
+}
+
+.Newspaper_Container .Shutuba_Note_Table a:hover {
+  text-decoration: none;
+}
+
+table.Shutuba_Note_Table tr.HorseList td.Cancel_NoData {
+  vertical-align: middle;
+  text-align: center;
+}
+
+.Shutuba_Note_Table .Horse_Info .Horse07 > a,
+.Shutuba_Note_Table .Horse_Info .Horse07 > span {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.Shutuba_Note_Table .Horse_Info .Horse07 > span {
+  color: #777;
+}
+
+/*======================================
+4.1 レース別馬メモ .NoteTable_Container
+======================================*/
+.NoteTable_Container {
+  padding: 10px 0 40px;
+}
+.NoteTable_Container .Title_Sec {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 21px 0 10px;
+}
+.NoteTable_Container .NoteBtn03 {
+  display: block;
+  min-width: 107px;
+  color: #444;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-align: center;
+  border: 1px solid #BFBFBF;
+  background: #fff;
+  line-height: 2.16;
+  border-radius: 2em;
+  cursor: pointer;
+}
+
+.Note_Table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+}
+.Note_Table td {
+  border: 1px solid #DADADA;
+  vertical-align: middle;
+}
+.Note_Table .Horse_Name {
+  padding: 11px 5px;
+  min-width: 146px;
+  line-height: 1;
+  font-size: 0.875rem;
+  color: #666666;
+  font-weight: bold;
+}
+.Note_Table .Comment {
+  position: relative;
+  min-width: 210px;
+  padding: 5px 5px;
+}
+.Note_Table .Comment a {
+  display: block;
+}
+.Note_Table .Comment a:hover {
+  text-decoration: none;
+}
+.Note_Table .Comment .New_Comment .Comment_Text {
+  margin-left: 28px;
+  color: #C1C1C1;
+}
+.Note_Table .Comment .New_Comment .NoteIcon {
+  width: 22px;
+  height: 22px;
+  right: auto;
+  left: 5px;
+  bottom: 7px;
+}
+.Note_Table .Comment .New_Comment .NoteIcon::before, .Note_Table .Comment .New_Comment .NoteIcon::after {
+  content: "";
+  display: inline-block;
+  position: absolute;
+  width: 2px;
+  height: 12px;
+  background-color: #fff;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  left: 0;
+  margin: auto;
+}
+.Note_Table .Comment .New_Comment .NoteIcon::before {
+  transform: inherit;
+  border-top: none;
+  border-right: none;
+}
+.Note_Table .Comment .New_Comment .NoteIcon::after {
+  transform: rotate(90deg);
+}
+.Note_Table .Comment .NoteIcon {
+  bottom: 5px;
+  right: 10px;
+}
+.Note_Table .Comment .NoteLabel_Inner {
+  margin-bottom: 3px;
+  display: block;
+}
+.Note_Table .Comment .NoteLabel {
+  display: inline-block;
+  margin-right: 5px;
+}
+.Note_Table .Comment .Comment_Text {
+  margin-right: 30px;
+  line-height: 1.56;
+  font-size: 0.875rem;
+  color: #444;
+  overflow-wrap: anywhere;
+}
+
+.Note_Table [class*=Waku], .Stable_Time [class*=Waku] {
+  min-width: 21px;
+  vertical-align: middle;
+  padding: 0 1px;
+  text-align: center;
+  letter-spacing: -1px;
+  margin-bottom: 10px;
+  font-size: 0.8125rem;
+}
+
+.MoreBtn_Inenr {
+  position: relative;
+  margin-top: 10px;
+  z-index: 10;
+}
+.MoreBtn_Inenr::before {
+  display: block;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 80px;
+  background: linear-gradient(top, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.9) 50%, rgba(255, 255, 255, 0.9) 50%, #fff 100%);
+  background: -webkit-linear-gradient(top, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.9) 50%, rgba(255, 255, 255, 0.9) 50%, #fff 100%);
+  content: "";
+}
+
+.MoreBtn {
+  display: block;
+  min-width: 142px;
+  max-width: 300px;
+  width: 49%;
+  margin: 0 auto;
+  position: relative;
+  color: #666;
+  font-size: 12px;
+  text-align: center;
+  border: 1px solid #DADADA;
+  background: #fff;
+  border-radius: 1.27em;
+  line-height: 2.55;
+}
+.MoreBtn .Icon_ArrowB {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 1px;
+  background: none;
+  border-top: 2px solid #888;
+  border-right: 2px solid #888;
+  transform: rotate(135deg);
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  margin-top: -5px;
+}
+.MoreBtn:hover {
+  text-decoration: none;
+}
+
+.MoreBtn02 {
+  display: block;
+  width: 78%;
+  min-width: 142px;
+  margin: 0 auto;
+  position: relative;
+  color: #666;
+  font-size: 61%;
+  text-align: center;
+  border: 1px solid #e0e0e0;
+  background: #fff;
+  border-radius: 1.27em;
+  line-height: 2.55;
+}
+.MoreBtn02 .icon_Read01 {
+  display: inline-block;
+  position: relative;
+  vertical-align: middle;
+  margin-left: 13px;
+  width: 11px;
+  height: 12px;
+  background: url("../img/icon_sprite_column.png") no-repeat;
+  background-size: 70px auto;
+  background-position: -26px -96px;
+}
+
+/*最初の隠しボタン*/
+.NoteForm_Button {
+  display: block;
+  min-width: 142px;
+  max-width: 300px;
+  width: 49%;
+  margin: 0 auto;
+  position: relative;
+  color: #444;
+  font-size: 12px;
+  text-align: center;
+  border: 1px solid #C8C8C8;
+  background: #fff;
+  border-radius: 4px;
+  line-height: 2.55;
+}
+
+.NoteForm_Button_Text {
+  margin-top: 5px;
+  text-align: center;
+  color: #6B6B6B;
+  font-size: 11px;
+}
+
+/*---------------------------------
+4.2.登録モーダル  .MemoInputModal
+---------------------------------*/
+.BetAddInputModal .ModalPopupInner01 .AplHeader_Wrap {
+  height: 44px;
+}
+
+.BetAddInputModal .ModalPopupInner01 .AplHeader {
+  top: 0;
+  height: 44px;
+  width: 100%;
+  overflow: hidden;
+  border-bottom: 1px solid #d3d7d9;
+}
+
+.BetAddInputModal .AplHeader .Close_Link {
+  display: block;
+  height: 44px;
+  position: absolute;
+  top: 0;
+  right: 10px;
+  left: auto;
+}
+
+.BetAddInputModal .AplHeader .Close_Link .Icon_Close {
+  display: inline-block;
+  width: 44px;
+  height: 44px;
+}
+
+.BetAddInputModal .AplHeader .Close_Link .Icon_Close:before,
+.BetAddInputModal .AplHeader .Close_Link .Icon_Close:after {
+  position: absolute;
+  width: 20px;
+  top: 21px;
+  left: 11px;
+  content: "";
+  display: block;
+  width: 15px;
+  height: 1px;
+  background: #888;
+  transform: rotate(-45deg);
+}
+
+.BetAddInputModal .AplHeader .Close_Link .Icon_Close:after {
+  transform: rotate(45deg);
+}
+
+body .Wrap.ViewOut {
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+  position: relative !important;
+  top: 0 !important;
+  left: 0;
+}
+
+footer.ViewOut {
+  opacity: 0;
+}
+
+.ModalOverlay {
+  background: rgba(0, 0, 0, 0.6);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 7200;
+  transition: opacity 0.7s, transform 0s 0.5s;
+}
+
+.BetAddInputModal {
+  background-color: #fff;
+  width: 100%;
+  max-width: 480px;
+  padding-bottom: 20px;
+  position: fixed;
+  top: 200%;
+  left: 50%;
+  margin: 0;
+  z-index: 7500;
+  border-radius: 10px 10px 0 0;
+  overflow: hidden;
+  transform: translate3d(-50%, 0, 0);
+  transition: all 0.4s;
+}
+
+.BetAddInputModal.OpenDraw {
+  top: 10%;
+  bottom: 0;
+  transform: translate3d(-50%, 0, 0);
+}
+
+.ModalCloseBtn01 {
+  position: absolute;
+  left: 50%;
+  bottom: -50px;
+  width: 35px;
+  height: 35px;
+  margin-left: -13px;
+  text-indent: 200%;
+  white-space: nowrap;
+  overflow: hidden;
+  border: 1px solid #fff;
+  border-radius: 50%;
+  cursor: pointer;
+  z-index: 10;
+}
+
+.MemoInputModal .Title_Sec {
+  margin: 21px 10px;
+}
+
+.AddIframe {
+  width: 100%;
+  position: absolute;
+  top: 44px;
+  bottom: 0;
+}
+
+.AddIframe iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+@media only screen and (min-width: 768px) {
+  .BetAddInputModal {
+    border-radius: 20px;
+    min-height: 80vh;
+  }
+  .BetAddInputModal.OpenDraw {
+    top: 50%;
+    bottom: auto;
+    transform: translate3d(-50%, -50%, 0);
+  }
+  .BetAddInputModal .AplHeader .Close_Link .Icon_Close:before,
+  .BetAddInputModal .AplHeader .Close_Link .Icon_Close:after {
+    width: 20px;
+    height: 2px;
+    left: 15px;
+  }
+}
+/*swal-modal　ボタン*/
+.swal-button--ok,
+.swal-button--confirm {
+  background: #3251bc;
+  color: #fff;
+  border: none;
+}
+
+.swal-button--ok:hover,
+.swal-button--confirm:hover {
+  background-color: #3251bc !important;
+  opacity: 0.85;
+}
+
+/*======================================
+4.3.レース別メモ 記入フォーム
+======================================*/
+.NoteForm_Cont .Title_Sec {
+  margin: 21px 10px 21px;
+}
+.NoteForm_Cont .Title_Sec h2 {
+  color: #777;
+}
+.NoteForm_Cont input {
+  margin: 0;
+  padding: 0;
+  background: none;
+  border: none;
+  border-radius: 0;
+  outline: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+.NoteForm_Cont input[type=checkbox] {
+  display: none;
+}
+
+.NoteForm_Head {
+  margin: 0 14px 18px;
+}
+.NoteForm_Head .Race_Day {
+  font-size: 0.8125rem;
+  color: #666;
+}
+.NoteForm_Head .Race_Place {
+  font-size: 0.8125rem;
+  color: #666;
+}
+.NoteForm_Head .Race_R {
+  font-size: 0.8125rem;
+  color: #666;
+}
+.NoteForm_Head .Race_Name {
+  font-size: 1rem;
+  font-weight: bold;
+  color: #444;
+}
+
+.NoteCheck_Inner {
+  margin-bottom: 10px;
+  padding-left: 13px;
+  white-space: normal;
+}
+
+.NoteCheck_Label {
+  box-sizing: border-box;
+  position: relative;
+  display: inline-block;
+  margin-right: 5px;
+  margin-bottom: 10px;
+  border-radius: 12px;
+  line-height: 1;
+  font-size: 0.875rem;
+  background-color: #E9E9E9;
+  vertical-align: middle;
+  cursor: pointer;
+}
+
+.NoteCheck_Label.bk01,
+.NoteCheck_Label.bk02,
+.NoteCheck_Label.bk03 {
+  padding: 5px 7px;
+  color: #444;
+}
+
+.SelectedHorse {
+  white-space: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.Horse_Note_Modal .NoteCheck_Label.bk01,
+.SelectedHorse .NoteCheck_Label.bk01 {
+  padding: 5px 15px 5px 27px;
+  font-weight: bold;
+}
+
+.Horse_Note_Modal .NoteCheck_Label.bk01::before,
+.SelectedHorse .NoteCheck_Label.bk01::before {
+  position: absolute;
+  top: 50%;
+  left: 9px;
+  display: block;
+  margin-top: -7px;
+  width: 5px;
+  height: 9px;
+  border-right: 2px solid #888888;
+  border-bottom: 2px solid #888888;
+  border-radius: 1px;
+  content: "";
+  transform: rotate(45deg);
+}
+
+.Horse_Note_Modal .NoteCheck:checked + .NoteCheck_Label.bk01:before,
+.SelectedHorse .NoteCheck:checked + .NoteCheck_Label.bk01:before {
+  border-right: 2px solid #fff;
+  border-bottom: 2px solid #fff;
+}
+
+.Horse_Note_Modal .NoteCheck:checked + .bk01,
+.SelectedHorse .NoteCheck:checked + .bk01 {
+  background-color: #3951B5;
+}
+
+.NoteCheck:checked + .bk01 {
+  background-color: #699EE6;
+  color: #fff;
+  font-weight: bold;
+}
+
+.NoteCheck:checked + .bk02 {
+  background-color: #E4918E;
+  color: #fff;
+  font-weight: bold;
+}
+
+.NoteCheck:checked + .bk03 {
+  background-color: #6A7291;
+  color: #fff;
+  font-weight: bold;
+}
+
+.NoteTextarea_Inner {
+  position: relative;
+  padding: 0 10px;
+}
+
+.NoteTextarea {
+  width: 100%;
+  height: 180px;
+  padding: 13px 15px;
+  line-height: 1.44;
+  border: solid 1px #CACACA;
+  border-radius: 4px;
+  color: #444444;
+  font-size: 1.0625rem;
+}
+.NoteTextarea:focus-visible {
+  outline: 1px solid #3251BC;
+}
+
+.Counter_Text {
+  position: absolute;
+  bottom: 17px;
+  left: 14px;
+  color: #444444;
+  font-size: 0.8125rem;
+}
+.Counter_Text.Error {
+  color: #EF5350;
+}
+
+.NoteButton_Inner {
+  margin-top: 18px;
+  text-align: right;
+}
+.NoteButton_Inner .NoteBtn01 {
+  border: none;
+  box-shadow: none;
+  margin: 0;
+  border-radius: 5px;
+  font-size: 0.875rem;
+  padding: 5px 0;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+.NoteButton_Inner .NoteBtn01.Cancel_Btn01 {
+  width: 102px;
+  background-color: #E9E9E9;
+  color: #333333;
+}
+.NoteButton_Inner .NoteBtn01.Save_Btn {
+  margin-left: 10px;
+  width: 76px;
+  background-color: #3150BB;
+  color: #fff;
+  font-weight: bold;
+}
+
+/*ラップタイム*/
+.ResultPayback .Race_HaronTime {
+  table-layout: fixed;
+}
+
+/*======================================
+ログイン導線 ポップアップ
+======================================*/
+#Netkeiba_Race_Nar_Result #cboxLoadedContent {
+  margin-top: 0;
+}
+
+body.Note_Past5 #cboxLoadedContent {
+  margin-top: 0;
+}
+
+body.Note_Past5 .horse_bookmark_popup_01 {
+  padding: 5px;
+}/*# sourceMappingURL=note_pc.css.map */

@@ -1,0 +1,681 @@
+//------------------------------------------------------------
+// コンストラクタ
+//------------------------------------------------------------
+var YosoJraNar = function( _api_action_url, _debug){
+    var self = this;
+    self.debug = (undefined === _debug) ? false : _debug;
+
+    if(self.debug) console.log('YosoJraNar(%s,%s)', _api_action_url, _debug);
+
+    if (_api_action_url != undefined && _api_action_url != '') {
+        if (_api_action_url.slice(-1) == '/') {
+        } else {
+            _api_action_url += '/';
+        }
+    }
+    self.api_action_url = _api_action_url;
+    self.api_syusai = 'jra';
+};
+
+//------------------------------------------------------------
+// YosoJra オブジェクト
+//------------------------------------------------------------
+YosoJraNar.prototype = {
+
+    //---------------------------------------------------------
+    // APIで使用する主催の設定
+    //---------------------------------------------------------
+    SetApiSyusai : function (_syusai)
+    {
+        var self = this;
+        if(self.debug) console.log('SetApiSyusai(%s)', _syusai);
+
+        if (_syusai != undefined) {
+            if (_syusai == 'jra' || _syusai == 'nar') {
+                self.api_syusai = _syusai;
+            }
+        }
+    },
+
+    //---------------------------------------------------------
+    // Debugの設定
+    //---------------------------------------------------------
+    SetDebug : function ()
+    {
+        var self = this;
+        self.debug = true;
+    },
+
+    //---------------------------------------------------------
+    // 購入済み判定リスト取得
+    //---------------------------------------------------------
+    checkPurchesItem : function( _ary_item_id, _callback )
+    {
+        var self = this;
+        if(self.debug) console.log('checkPurchesItem(%O,%O)',_ary_item_id,_callback);
+
+        var _data = {
+             input   :'UTF-8'
+            ,output  :'jsonp'
+            ,action  :'check'
+            ,item_id :_ary_item_id
+        };
+
+        $.ajax({ type     : 'POST',
+            url      : self.api_action_url+'shop/api_post_purchase.html',
+            data     : _data,
+            dataType : _data.output,
+            success  : function( json )
+            {
+                if (json.status == 'OK' || (json.status == 'NG' && json.reason == 'not login')) {
+                    if (undefined != _callback) {
+                        _callback( json.data );
+                    }
+                }
+            },
+            error  : function(XMLHttpRequest, textStatus, errorThrown)
+            {
+                if(self.debug) console.log('XMLHttpRequest: %O',XMLHttpRequest);
+                if(self.debug) console.log('textStatus: %O',textStatus);
+            }
+       });
+    },
+
+    //---------------------------------------------------------
+    // キャッシュバンク判定リスト取得
+    //---------------------------------------------------------
+    getCashbackList : function( _item_id, _callback )
+    {
+        var self = this;
+        if(self.debug) console.log('getCashbackList(%s,%O)',_item_id,_callback);
+
+        var _data = {
+             input   :'UTF-8'
+            ,output  :'jsonp'
+            ,action  :'cashback_stat'
+            ,item_id :_item_id
+        };
+
+        $.ajax({ type     : 'POST',
+            url      : self.api_action_url+'shop/api_post_purchase.html',
+            data     : _data,
+            dataType : _data.output,
+            success  : function( json )
+            {
+                if(json.status == 'NG'){
+                    if(self.debug) console.log('status:NG reason:'+ json.reason);
+                }else if(undefined != _callback){
+                    _callback( json.data );
+                }
+            },
+            error  : function(XMLHttpRequest, textStatus, errorThrown)
+            {
+                if(self.debug) console.log('XMLHttpRequest: %O',XMLHttpRequest);
+                if(self.debug) console.log('textStatus: %O',textStatus);
+            }
+       });
+    },
+
+    //------------------------------------------------------------
+    // 予想商品(馬券イメージ)取得
+    //------------------------------------------------------------
+    getBakenImageV2 : function ( _ary_yoso_id, _callback  )
+    {
+        var self = this;
+        if(self.debug) console.log('getBakenImageV2(%O,%O)',_ary_yoso_id,_callback);
+
+        var _data = {};
+        _data.input       = 'UTF-8';
+        _data.output      = 'jsonp';
+        _data.yoso_id     = _ary_yoso_id;
+        $.ajax({type     : 'POST',
+            url      : self.api_action_url+'race/jra/api_get_baken_view_v2.html',
+            data     : _data,
+            dataType : _data.output,
+            success:function( json ){
+                if(json.status == 'NG'){
+                    if(self.debug) console.log('status:NG reason:'+ json.reason);
+                }else if(undefined != _callback){
+                    _callback( json.data );
+                }
+            },
+            error: function( XMLHttpRequest, textStatus, errorThrown)
+            {
+                if(self.debug) console.log('XMLHttpRequest: %O',XMLHttpRequest);
+                if(self.debug) console.log('textStatus: %O',textStatus);
+            }
+        });
+    },
+
+    //------------------------------------------------------------
+    // 予想商品数(レース別)
+    //------------------------------------------------------------
+    countGoodsByRace : function( _ary_race_id, _callback  )
+    {
+        var self = this;
+        if(self.debug) console.log('getGoodsCountByRace(%O,%O)',_ary_race_id,_callback);
+        var _data = {};
+        _data.input       = 'UTF-8';
+        _data.output      = 'jsonp';
+        _data.action      = 'count';
+        _data.cond_type  = 'r'; // レース軸の検索
+        _data.race_id   = _ary_race_id;
+        $.ajax({type     : 'POST',
+            url      : self.api_action_url+'race/jra/api_post_goods.html',
+            data     : _data,
+            dataType : _data.output,
+            success:function( json ){
+                if(json.status == 'NG'){
+                     if(self.debug) console.log('status:NG reason:'+ json.reason);
+                }else if(undefined != _callback){
+                    _callback( json.data );
+                }
+            }, error: function( XMLHttpRequest, textStatus, errorThrown)
+            {
+                if(self.debug) console.log('XMLHttpRequest: %O',XMLHttpRequest);
+                if(self.debug) console.log('textStatus: %O',textStatus);
+            }
+        });
+    },
+
+    //---------------------------------------------------------
+    // 商品一覧取得
+    //---------------------------------------------------------
+    ShowGoodsListRace : function (_race_id, _yosoka_id, _callback)
+    {
+        var self = this;
+
+        var _data = {};
+        _data.input       = 'UTF-8';
+        _data.output      = 'jsonp';
+        _data.race_id   = _race_id;
+        _data.yosoka_id = _yosoka_id;
+
+        $.ajax({type     : 'POST',
+            url      : self.api_action_url + 'race/jra/api_get_goods_list_race.html',
+            data     : _data,
+            dataType : _data.output,
+            success:function( data  ){
+                if(undefined != _callback){
+                    _callback( data );
+                }
+            },
+            error: function( XMLHttpRequest, textStatus, errorThrown)
+            {
+                if(self.debug) console.log('XMLHttpRequest: %O',XMLHttpRequest);
+                if(self.debug) console.log('textStatus: %O',textStatus);
+            }
+        });
+    },
+
+    //---------------------------------------------------------
+    // 商品一覧取得v2
+    //---------------------------------------------------------
+    ShowGoodsListRace_v2 : function ( _show_id, _race_id, _limit, _device, _callback )
+    {
+        var self = this;
+        if(self.debug) console.log('ShowGoodsListRaceV2(%s,%s,%s,%s,%s)',_show_id,_race_id,_limit,_device, _callback);
+
+        var _data = {};
+        _data.input       = 'UTF-8';
+        _data.output      = 'jsonp';
+        _data.show_id     = _show_id;
+        _data.cond_type  = 'r';    // レース軸の検索
+        _data.race_id   = _race_id;
+        if(undefined != _limit){
+            _data.limit   = _limit;
+        }
+        if(undefined != _device){
+            _data.device = _device;
+        }
+        $.ajax({
+            type     : 'GET',
+            url      : self.api_action_url + 'race/' + self.api_syusai + '/api_get_goods_list_race_v2.html',
+            data     : _data,
+            dataType : _data.output,
+            success:function( data ){
+                if(undefined != _callback){
+                    _callback( data );
+                }
+            },
+            error: function( XMLHttpRequest, textStatus, errorThrown)
+            {
+                if(self.debug) console.log('XMLHttpRequest: %O',XMLHttpRequest);
+                if(self.debug) console.log('textStatus: %O',textStatus);
+            }
+        });
+    },
+
+    //---------------------------------------------------------
+    // 商品一覧取得v3(予想タブ)
+    //---------------------------------------------------------
+    ShowGoodsListRace_v3 : function ( _show_id, _race_id, _filter, _sort, _yosoka_id, _return_url, _mode, _callback )
+    {
+        var self = this;
+        if(self.debug) console.log('ShowGoodsListRaceV3(%s,%s,%s,%s,%s,%s,%s,%s)',_show_id,_race_id,_filter,_sort,_yosoka_id,_return_url,_mode,_callback);
+
+        var _data = {};
+        _data.input       = 'UTF-8';
+        _data.output      = 'jsonp';
+        _data.show_id     = _show_id;
+        _data.race_id     = _race_id;
+        if(undefined != _filter){
+            _data.filter = _filter;
+        }
+        if(undefined != _sort){
+            _data.sort = _sort;
+        }
+        if(undefined != _yosoka_id){
+            _data.yosoka_id = _yosoka_id;
+        }
+        if(undefined != _return_url){
+            _data.return_url = _return_url;
+        }
+        if(undefined != _mode){
+            _data.mode = 'sendmsg';
+        }
+        $.ajax({
+            type     : 'GET',
+            url      : self.api_action_url + 'race/' + self.api_syusai + '/api_get_goods_list_race_v3.html',
+            data     : _data,
+            dataType : _data.output,
+            success:function( data ){
+                if(undefined != _callback){
+                    _callback( data );
+                }
+            },
+            error: function( XMLHttpRequest, textStatus, errorThrown)
+            {
+                if(self.debug) console.log('XMLHttpRequest: %O',XMLHttpRequest);
+                if(self.debug) console.log('textStatus: %O',textStatus);
+            }
+        });
+    },
+
+    //---------------------------------------------------------
+    // レース商品一覧の取得 中央・地方
+    //---------------------------------------------------------
+    ShowGoodsListByRaceV4 : function( _show_id, _race_id, _filter, _sort, _yosoka_id )
+    {
+        var self = this;
+        if(self.debug) console.log('ShowGoodsListByRace(%s,%s,%s,%s,%s)',_show_id,_race_id,_filter,_sort,_yosoka_id);
+
+        var _data = {
+            input   :'UTF-8'
+            ,output  :'jsonp'
+            ,show_id :_show_id
+            ,race_id :_race_id
+        };
+        if(undefined != _filter){
+            _data.filter = _filter;
+        }
+        if(undefined != _sort){
+            _data.sort = _sort;
+        }
+        if(undefined != _yosoka_id){
+            _data.yosoka_id = _yosoka_id;
+        }
+        $.ajax({type     : 'GET',
+            url      : self.api_action_url+'race/' + self.api_syusai + '/api_get_goods_list_v4.html',
+            data     : _data,
+            dataType : _data.output,
+            success:function( data ){
+                $("#"+_show_id).html( data );
+            },
+            error: function( XMLHttpRequest, textStatus, errorThrown) {
+                if(self.debug) console.log('XMLHttpRequest: %O',XMLHttpRequest);
+                if(self.debug) console.log('textStatus: %O',textStatus);
+            }
+        });
+    },
+
+    //------------------------------------------------------------
+    // ポイント残高取得
+    //------------------------------------------------------------
+    GetUserPoint : function ( _callback )
+    {
+        var self = this;
+        if(self.debug) console.log('getCurPoint(%O)',_callback);
+
+        var _data = {};
+        _data.input     = 'UTF-8';
+        _data.output = 'jsonp';
+        $.ajax({ type     : 'POST',
+             url      : self.api_action_url + 'shop/api_get_user_point.html',
+             data     : _data,
+             dataType : _data.output,
+             success  : function( json )
+                 {
+                     if(json.status == 'NG'){
+                         if(self.debug) console.log('status:NG reason:'+ json.reason);
+             }else if(undefined != _callback){
+                 _callback( json.data );
+             }
+                 },
+             error  : function(XMLHttpRequest, textStatus, errorThrown)
+                 {
+                     if(self.debug) console.log('XMLHttpRequest: %O',XMLHttpRequest);
+                     if(self.debug) console.log('textStatus: %O',textStatus);
+             }
+        });
+    },
+
+    //------------------------------------------------------------
+    // ポイント残高取得(2020/04 以降の残高内訳)
+    //------------------------------------------------------------
+    GetZanUserPoint : function ( _callback )
+    {
+        var self = this;
+        if(self.debug) console.log('getCurPoint(%O)',_callback);
+
+        var _data = {};
+        _data.input     = 'UTF-8';
+        _data.output = 'jsonp';
+        $.ajax({ type     : 'POST',
+             url      : self.api_action_url + 'shop/api_get_user_zan_point.html',
+             data     : _data,
+             dataType : _data.output,
+             success  : function( json )
+                 {
+                     if(json.status == 'NG'){
+                         if(self.debug) console.log('status:NG reason:'+ json.reason);
+             }else if(undefined != _callback){
+                 _callback( json.data );
+             }
+                 },
+             error  : function(XMLHttpRequest, textStatus, errorThrown)
+                 {
+                     if(self.debug) console.log('XMLHttpRequest: %O',XMLHttpRequest);
+                     if(self.debug) console.log('textStatus: %O',textStatus);
+             }
+        });
+    },
+
+    //------------------------------------------------------------
+    // 予想無料体験
+    //------------------------------------------------------------
+    GetYosoTrial : function (_callback)
+    {
+        var self = this;
+        console.log('GetYosoTrial');
+
+        var _data = {};
+        _data.input       = 'UTF-8';
+        _data.output      = 'jsonp';
+        $.ajax({
+            type     : 'GET',
+            url      : this.api_action_url + 'shop/api_get_trial.html',
+            data     : _data,
+            dataType : _data.output,
+            success:function( data ){
+                if (undefined != _callback) {
+                    _callback(data);
+                }
+            },
+            error: function( XMLHttpRequest, textStatus, errorThrown)
+            {
+                console.log('XMLHttpRequest: %O',XMLHttpRequest);
+                console.log('textStatus: %O',textStatus);
+            }
+        });
+    },
+
+    //------------------------------------------------------------
+    // cookie
+    //------------------------------------------------------------
+    GetCookie : function(name) {
+        const value = "; " + document.cookie;
+        const parts = value.split("; " + name + "=");
+        if (parts.length === 2) return parts.pop().split(";").shift();
+        return undefined;
+    },
+
+    SetCookie: function(name, value, minutes) {
+        if (
+            typeof name !== "undefined"
+            && typeof value !== "undefined"
+            && typeof minutes !== "undefined"
+            && typeof minutes === "number"
+            && !isNaN(minutes)
+        ) {
+            const date = new Date();
+            date.setTime(date.getTime() + (minutes * 60 * 1000));
+            const expires = "; expires=" + date.toUTCString();
+            document.cookie = name + "=" + (value || "") + expires + "; path=/";
+        }
+    },
+
+    //------------------------------------------------------------
+    // 数値をカンマ区切りで表示
+    //------------------------------------------------------------
+    SeparateNum : function ( num )
+    {
+        return String(num).replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,");
+    },
+
+    //------------------------------------------------------------
+    // ↓↓↓カート情報
+    // 下記理由により一旦購入で使用しているカートを統合する
+    //   pid形式はそのままとしておく
+    //   _action_api_urlをグローバル定義する問題がある
+    //   NDCartApiも各ドメインで異なるので使用しずらい
+    //   いずれ共通おカートをセットしコールする形にする予定
+    //------------------------------------------------------------
+    //------------------------------------------------------------
+    // カート内容を取得する
+    //------------------------------------------------------------
+    cart_get_itemlist : function ( _group, _callback )
+    {
+        var self = this;
+        if(self.debug) console.log('cart_get_itemlist(%s,%O)',_group, _callback);
+
+        var _data = { pid : 'api_post_social_cart' };
+        _data.input  = 'UTF-8';
+        _data.output = 'jsonp';
+        _data.action = 'get';
+        _data.group = _group; 
+        jQuery.ajax( { type     : 'POST',
+                       url      : self.api_action_url,
+                       data     : _data,
+                       dataType : _data.output,
+                       success  : function( json )
+                       {
+                           if(json.status == 'NG'){
+                               if(self.debug) console.log('status:NG reason: %s',json.reason);
+                           }else if(undefined != _callback){
+                               _callback( json.data );
+                           }
+                       },
+                       error  : function(XMLHttpRequest, textStatus, errorThrown)
+                       {
+                           if(self.debug) console.log('XMLHttpRequest: %O',XMLHttpRequest);
+                           if(self.debug) console.log('textStatus: %s',textStatus);
+                       }
+        });
+    },
+
+    //------------------------------------------------------------
+    // カートにアイテムを追加・更新する
+    //------------------------------------------------------------
+    cart_add_item : function ( _group, _item_id, _item_value, _item_price, _client_data, _callback, _callback_err )
+    {
+        var self = this;
+        if(self.debug) console.log('cart_add_item(%s,%s,%s,%s,%s,%O,%O)',_group, _item_id, _item_value, _item_price, _client_data, _callback,_callback_err);
+
+        var _data = { pid : 'api_post_social_cart' };
+        _data.input     = 'UTF-8';
+        _data.output    = 'jsonp';
+        _data.action    = 'add';
+        _data.group     = _group; 
+        _data.item_id   = _item_id; 
+        _data.item_value  = _item_value; 
+        _data.item_price  = _item_price; 
+        _data.client_data = _client_data; 
+        jQuery.ajax( { type     : 'POST',
+                       url      : self.api_action_url,
+                       data     : _data,
+                       dataType : _data.output,
+                       success  : function( data )
+                       {
+                           if(data.status == 'NG'){
+                               if(self.debug) console.log('status:NG reason: %s',data.reason);
+                               if(undefined != _callback_err){
+                                   _callback_err( data );
+                               }
+                           }else{
+                               if(self.debug) console.log('status: %s ',data.status);
+                               if(undefined != _callback){
+                                   _callback( data.data );
+                               }
+                           }
+                       },
+                       error  : function(XMLHttpRequest, textStatus, errorThrown)
+                       {
+                           if(self.debug) console.log('XMLHttpRequest: %O',XMLHttpRequest);
+                           if(self.debug) console.log('textStatus: %s',textStatus);
+                       }
+        });
+    },
+
+    // 同期モデル
+    cart_add_item_sync : function ( _group, _item_id, _item_value, _item_price, _client_data )
+    {
+        var self = this;
+        if(self.debug) console.log('cart_add_item_sync(%s,%s,%s,%s,%s)',_group, _item_id, _item_value, _item_price, _client_data);
+
+        var dfd = $.Deferred();
+        var _data = { pid : 'api_post_social_cart' };
+        _data.input     = 'UTF-8';
+        _data.output    = 'jsonp';
+        _data.action    = 'add';
+        _data.group     = _group; 
+        _data.item_id   = _item_id; 
+        _data.item_value  = _item_value; 
+        _data.item_price  = _item_price; 
+        _data.client_data = _client_data; 
+
+        var ret = $.ajax({
+            type: 'POST',
+            url: self.api_action_url,
+            data: _data,
+            async: false,
+            dataType: _data.output
+        }).done(function(response){
+            if(self.debug) console.log('response: %O',response);
+        });
+        return dfd.promise();
+    },
+
+    //------------------------------------------------------------
+    // カートからアイテムを削除する
+    // _item_id: 複数指定可能
+    //------------------------------------------------------------
+    cart_remove_item : function ( _group, _item_id, _callback )
+    {
+        var self = this;
+        if(self.debug) console.log('cart_remove_item(%s,%s,%O)',_group, _item_id, _callback);
+
+        var _data = { pid : 'api_post_social_cart' };
+        _data.input     = 'UTF-8';
+        _data.output    = 'jsonp';
+        _data.action    = 'remove';
+        _data.group     = _group; 
+        _data.item_id   = _item_id; 
+        jQuery.ajax( { type     : 'POST',
+                       url      : self.api_action_url,
+                       data     : _data,
+                       dataType : _data.output,
+                       success  : function( data )
+                       {
+                           if(data.status == 'NG'){
+                               if(self.debug) console.log('status:NG reason: %s',data.reason);
+                           }else if(undefined != _callback){
+                               _callback();
+                           }
+                       },
+                       error  : function(XMLHttpRequest, textStatus, errorThrown)
+                       {
+                           if(self.debug) console.log('XMLHttpRequest: %O',XMLHttpRequest);
+                           if(self.debug) console.log('textStatus: %s',textStatus);
+                       }
+         });
+    },
+
+    //------------------------------------------------------------
+    // カートをクリアする
+    //------------------------------------------------------------
+    cart_clear_item : function ( _group, _callback )
+    {
+        var self = this;
+        if(self.debug) console.log('cart_clear_item(%s,%O)',_group, _callback);
+
+        var _data = { pid : 'api_post_social_cart' };
+
+        _data.input     = 'UTF-8';
+        _data.output = 'jsonp';
+        if(undefined == _group){
+            _data.action = 'clear_all';
+        }else{
+            _data.action = 'clear';
+        }
+        _data.group = _group; 
+        jQuery.ajax( { type     : 'POST',
+                       url      : self.api_action_url,
+                       data     : _data,
+                       dataType : _data.output,
+                       success  : function( data )
+                       {
+                           if(data.status == 'NG'){
+                               if(self.debug) console.log('status:NG reason: %s',data.reason);
+                           }else if(undefined != _callback){
+                               _callback();
+                           }
+                       },
+                       error  : function(XMLHttpRequest, textStatus, errorThrown)
+                       {
+                           if(self.debug) console.log('XMLHttpRequest: %O',XMLHttpRequest);
+                           if(self.debug) console.log('textStatus: %s',textStatus);
+                       }
+          });
+    },
+
+    //-- 同期モデル
+    cart_clear_item_sync : function ( _group )
+    {
+        var self = this;
+        if(self.debug) console.log('cart_clear_item_sync(%s)',_group);
+
+        var dfd = $.Deferred();
+        var _data = { pid : 'api_post_social_cart' };
+        _data.input     = 'UTF-8';
+        _data.output = 'jsonp';
+        if(undefined == _group){
+            _data.action = 'clear_all';
+        }else{
+            _data.action = 'clear';
+        }
+        _data.group = _group; 
+        var ret = $.ajax({
+            type: 'POST',
+            url: self.api_action_url,
+            data: _data,
+            async: false,
+            dataType: _data.output,
+            success  : dfd.resolve,
+            error  : dfd.reject
+        })
+        return dfd.promise();
+    },
+    //------------------------------------------------------------
+    // ↑↑↑カート情報
+    //------------------------------------------------------------
+
+    //------------------------------------------------------------
+    // この上に関数追加する
+    // 関数の最後のカンマは必ずつける意味で追加した
+    //------------------------------------------------------------
+    EndDumyFunc:function()
+    {
+        return 'EndDumy';
+    }
+};

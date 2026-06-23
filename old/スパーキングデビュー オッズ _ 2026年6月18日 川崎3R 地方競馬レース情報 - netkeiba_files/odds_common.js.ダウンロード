@@ -1,0 +1,258 @@
+//===========================================================
+// Docment Readyになったときに処理するもの
+//===========================================================
+$(document).ready(function ()
+{
+    t_check=0;
+	// cart_get_itemlist( _cart_group_bet, init_select_kaime );
+	// rectangle_number();
+});
+
+//
+// 数字を□囲みに書き換える
+//
+function rectangle_number()
+{
+    $("[id^='rectangle']").each(function() {
+			var number 	= $(this);
+			var tmp = number[0].innerHTML;
+			var mark = tmp.split(' , ');
+
+			var html_tmp = '';
+
+			for (var i = 0; i < mark.length; i ++) {
+					html_tmp += '<span class="UmaBan">'+mark[i]+'</span>';
+			}
+	    number[0].innerHTML = html_tmp;
+    });
+}
+
+//===========================================================
+// オッズ検索結果にて、
+// すでにチェック済みの買い目にチェックを入れる
+// in: _cart       = cart_get_itemlist()の戻り(item_id)
+//     _aryID['0'] = チェック対象のchkboxのidタグ検索キー
+//===========================================================
+function init_select_kaime( _cart )
+{
+    console.log('init_select_kaime');
+
+    $("[id^='check_b']").each(function()
+	{
+		var chkbox 	= $(this);
+		var count 	= chkbox.val();
+    	var select_name = chkbox.attr('name');
+
+	    for(var item_id in _cart)
+		{
+			if (item_id == select_name)
+			{// すでにチェック済みの買い目と一致したとき
+
+				chkbox.prop("checked", true);	// 該当chkboxをチェック
+                $(this).parent().parent().addClass('Selected');
+			}
+	    }
+    });
+
+    $("[id^='check_m']").each(function()
+	{
+		var chkbox 	= $(this);
+		var count 	= chkbox.val();
+    	var select_name = chkbox.attr('name');
+
+	    for(var item_id in _cart)
+		{
+			if (item_id == select_name)
+			{// すでにチェック済みの買い目と一致したとき
+
+				chkbox.prop("checked", true);	// 該当chkboxをチェック
+                $(this).parent().parent().parent().addClass('Selected');
+			}
+	    }
+    });
+	view_check_count();		// チェック数をカウント(初期表示)
+}
+
+//------------------------------------------------------------
+// 買い目点数のカウント・表示
+//------------------------------------------------------------
+function view_check_count()
+{
+    var cnt = 0;
+    $("[id^='check_" + _baken_kind + "']").each(function()
+	{
+		var chkbox = $(this);
+		if ( chkbox.prop("checked") == true )
+		{
+			cnt++;
+		}
+    });
+    console.log('view_check_count _cnt='+cnt);
+    $('#odds_select').text( cnt);
+
+
+
+
+    var limit = '50';
+    var cookie = document.cookie.split(';');
+    for(var i = 0; i < cookie.length; i++){
+        var item = cookie[i].split('=');
+        //投票モード確認
+        if(item[0].trim() === 'bet_mode' && item[1].trim() === 'spat4'){
+            limit = '120';
+        }
+    }
+    var err_text = '件数オーバー(1度の投票は'+limit+'件まで)';
+
+    //51件以上の買い目が選択されている場合はアラートメッセージ
+    if(cnt==0)
+    {
+//        $('#bet_window').css("display", "none");
+    }
+    else if(cnt>limit)
+    {
+        $('#bet_window').css("display", "block");
+        $('#caution_50bet').css("display", "block");
+        $('#caution_50bet > font').text(err_text);
+    }
+    else
+    { 
+        $('#bet_window').css("display", "block");
+        $('#caution_50bet').css("display", "none");
+		$('#bet_window').show();
+    }
+}
+
+function update_cart_checkbox( _group, _item_id, _item_value, _client_data, _checked )
+{
+    console.log('update_cart_checkbox');
+
+    if(true == _checked){
+	cart_add_item( _group, _item_id, _item_value, '', _client_data );
+    }else{
+	cart_remove_item( _group, _item_id );
+    }
+}
+
+$(function() {
+	actionCheckbox();
+});
+
+function actionCheckbox() {
+	$('.BuyCheck_Select').on("click", function() {
+		if ($(this).prop('checked')) {
+			$(this).each(function() {
+				$(this).parent().parent().addClass('Selected');
+			});
+		} else {
+			$(this).each(function() {
+				$(this).parent().parent().removeClass('Selected');
+			});
+		}
+	});
+	$('.Check .HorseCheck_Select').on("click", function() {
+		if ($(this).prop('checked')) {
+			$(this).each(function() {
+				$(this).parent().parent().parent().addClass('Selected');
+			});
+		} else {
+			$(this).each(function() {
+				$(this).parent().parent().parent().removeClass('Selected');
+			});
+		}
+	});
+
+	//=================================================
+	//買い目リストのチェック時に実行
+	//=================================================
+	$("[id^='check_']").on('click', function() {
+		update_cart_checkbox(_cart_group_bet, this.name, this.value, '', this.checked);
+		view_check_count();
+		if ($(this).prop('checked')) {
+			$(this).each(function() {
+				$(this).parent().parent().addClass('Selected');
+			});
+		} else {
+			$(this).each(function() {
+				$(this).parent().parent().removeClass('Selected');
+			});
+		}
+	});
+
+	$("[id^='check_b_']").on("click", function(){
+    	$('#btn_all_sel_kaime').prop("checked", false);
+    	$('#btn_all_clr_kaime').prop("checked", false);
+	});
+
+	var btn = $('.RaceOdds_Form_Btn').find('.SubmitBtn');
+	// var inputFixedArea = $('.InputFixedArea01');
+
+	// var hash = location.hash;
+	// if (hash == '#housiki_select2') {
+	// 	inputFixedArea.fadeIn();
+	// } else {
+	// 	inputFixedArea.fadeOut();
+	// }
+
+    //全選択・全解除
+    $('#btn_all_sel_kaime').on("click", function() {
+		if ( $(this).prop("checked")==true )
+		{
+            chkBoxAll(true);
+		}
+		else
+		{
+			$(this).prop("checked", true);
+		}
+    });
+    
+    $('#btn_all_clr_kaime').on("click", function() {
+        chkBoxAll(false);
+    	$('#btn_all_sel_kaime').prop("checked", false);
+    });
+}
+//------------------------------------------------------------
+// 指定したidのチェックボックスを全設定・全解除
+//------------------------------------------------------------
+function chkBoxAll(checked)
+{
+    var i=0;
+    var item_ids = new Array();
+
+    $("[id^='check_b_']").each(function(){
+        var chkbox1 = $(this);
+        item_ids[i++] = chkbox1[0].name;
+        chkbox1.prop("checked", checked);
+
+        if (checked == true)
+        {
+            $(this).parent().parent().addClass('Selected');
+        }
+        else
+        {
+            $(this).parent().parent().removeClass('Selected');
+        }
+    });
+    update_cart_checkbox( _cart_group_bet, item_ids, 1, '', checked);
+    view_check_count();
+}
+
+// (function($) {
+// 	$(window).scroll(function() {
+// 		var scroll = $(this).scrollTop();
+// 		var windowH = $(window).height();
+// 		if ($('.RaceOdds_Result.Type02').length > 0) {
+// 			var target = $('.RaceOdds_Result.Type02').offset().top;
+// 			if (scroll < target - windowH && t_check++>0)
+// 			{
+// 				$('#bet_window').fadeOut();
+// 			}
+// 			else
+// 			{
+// 				$('#bet_window').fadeIn();
+//       }
+// 		}
+// 	});
+// })(jQuery);
+
+

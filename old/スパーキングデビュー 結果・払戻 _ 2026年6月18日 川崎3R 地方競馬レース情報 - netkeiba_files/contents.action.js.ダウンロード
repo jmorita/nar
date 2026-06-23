@@ -1,0 +1,324 @@
+/**
+ * コラム一覧の表示
+ *
+ * @param  string  _show_id         表示ID
+ * @param  integer _rank_type       1 新着 2 アクセス 3 注目 4 新着（ソーシャル表示）
+ * @param  integer _category_id     コラムは5固定
+ * @param  integer _subcategory_id  小カテゴリID
+ * @param  integer _limit
+ * @param  integer _page
+ * @param  integer _pager_type        'more_inner-n': 更に読み込む(n回で more_outer)
+ *                                    'more_outer'  : もっと見る(別ページリンク)
+ *                                    'pager'       : ページャ
+ * @param  integer _pager_url         'more_xxx'の際にリンクページおおびパラメータ
+ */
+function showColumnRanking( _show_id, _rank_type, _category_id, _subcategory_id, _limit, _page, _pager_type, _pager_url, _pid_suffix, _id_list )
+{
+    var _data = { pid : 'api_get_column_rank' };
+
+    _data.input             = 'UTF-8';
+    _data.output            = 'jsonp';
+    _data.show_id           = _show_id;
+    _data.rank_type         = _rank_type;
+    _data.category_id       = _category_id;
+    _data.subcategory_id    = _subcategory_id;
+    _data.limit             = _limit;
+    _data.page              = _page;
+    _data.pager_type        = _pager_type;
+    _data.pager_url         = _pager_url;
+    if( _id_list )
+    {
+        _data.id_list             = _id_list;
+    }
+    if ( undefined != _pid_suffix ){
+        _data._pid_suffix = _pid_suffix;
+    }
+    jQuery.ajax( { type     : 'GET',
+        url      : _contents_action_api_url,
+        data     : _data,
+        dataType : _data.output,
+        success  : function( data )
+        {
+           if(data.status == 'NG'){
+               console.log('status:NG reason:'+ data.reason);
+           }else{
+               jQuery( '#' + _show_id ).html( data );
+           }
+        }
+    } );
+}
+
+/*
+ *  netkeibaTVブロックの表示
+ *  @param  string  _show_id         表示ID
+ */
+function showColumnMovie( _show_id )
+{
+    var _data = { pid : 'api_get_column_movie' };
+
+    _data.input             = 'UTF-8';
+    _data.output            = 'jsonp';
+    _data.show_id           = _show_id;
+    jQuery.ajax( { type     : 'GET',
+        url      : _contents_action_api_url,
+        data     : _data,
+        dataType : _data.output,
+        success  : function( data )
+        {
+           if(data.status == 'NG'){
+               console.log('status:NG reason:'+ data.reason);
+           }else{
+               jQuery( '#' + _show_id ).html( data );
+           }
+        }
+    } );
+}
+
+/*
+ *  netkeibaTOPヘッドラインブロックの表示
+ *  @param  string  _show_id         表示ID
+ */
+function showTopHealine( _show_id )
+{
+    var _data = { pid : 'api_get_top_headline' };
+
+    _data.input             = 'UTF-8';
+    _data.output            = 'jsonp';
+    _data.show_id           = _show_id;
+    jQuery.ajax( { type     : 'GET',
+        url      : _contents_action_api_url,
+        data     : _data,
+        dataType : _data.output,
+        success  : function( data )
+        {
+           if(data.status == 'NG'){
+               console.log('status:NG reason:'+ data.reason);
+           }else{
+               jQuery( '#' + _show_id ).html( data );
+           }
+        }
+    } );
+}
+
+/**
+ * ニュース一覧の表示
+ *
+ * @param  string  _show_id         表示ID
+ * @param  integer _rank_type       1 新着
+ * @param  integer _category_id     ニュースは3固定
+ * @param  integer _subcategory_id  小カテゴリID
+ * @param  integer _limit
+ * @param  integer _page
+ * @param  integer _pager_type        'more_inner-n': 更に読み込む(n回で more_outer)
+ *                                    'more_outer'  : もっと見る(別ページリンク)
+ *                                    'pager'       : ページャ
+ * @param  integer _pager_url         'more_xxx'の際にリンクページおおびパラメータ
+ */
+function showNewsRanking( _show_id, _rank_type, _category_id, _subcategory_id, _limit, _page, _pager_type, _pager_url, _pid_suffix, _id_list )
+{
+    var _data = { pid : 'api_get_news_rank' };
+
+    _data.input             = 'UTF-8';
+    _data.output            = 'jsonp';
+    _data.show_id           = _show_id;
+    _data.rank_type         = _rank_type;
+    _data.category_id       = _category_id;
+    _data.subcategory_id    = _subcategory_id;
+
+    if( _limit )
+    {
+        _data.limit             = _limit;
+    }
+    if( _id_list )
+    {
+        _data.id_list             = _id_list;
+    }
+    _data.page              = _page;
+    _data.pager_type        = _pager_type;
+    _data.pager_url         = _pager_url;
+    if ( undefined != _pid_suffix ){
+        _data._pid_suffix = _pid_suffix;
+    }
+    jQuery.ajax( { type     : 'GET',
+        url      : _contents_action_api_url,
+        data     : _data,
+        dataType : _data.output,
+        success  : function( data )
+        {
+           if(data.status == 'NG'){
+               console.log('status:NG reason:'+ data.reason);
+           }else{
+               jQuery( '#' + _show_id ).html( data );
+           }
+        }
+    } );
+}
+
+function showNewsViewPreview( _show_id, _data_id )
+{
+    var _data = { pid : 'api_get_news_view_preview' };
+
+    _data.input             = 'UTF-8';
+    _data.output            = 'jsonp';
+    _data.show_id           = _show_id;
+    _data.data_id         = _data_id;
+    jQuery.ajax( { type     : 'GET',
+        url      : _contents_action_api_url,
+        data     : _data,
+        dataType : _data.output,
+        success  : function( data )
+        {
+           if(data.status == 'NG'){
+               console.log('status:NG reason:'+ data.reason);
+           }else{
+               jQuery( '#' + _show_id ).html( data );
+           }
+        }
+    } );
+}
+
+function showColumnViewPreview( _show_id, _data_id, _type )
+{
+    var _data = { pid : 'api_get_column_view_preview' };
+
+    _data.input             = 'UTF-8';
+    _data.output            = 'jsonp';
+    _data.show_id           = _show_id;
+    _data.data_id         = _data_id;
+
+    if( _type )
+    {
+        _data.type         = _type;
+    }
+
+    jQuery.ajax( { type     : 'GET',
+        url      : _contents_action_api_url,
+        data     : _data,
+        dataType : _data.output,
+        success  : function( data )
+        {
+           if(data.status == 'NG'){
+               console.log('status:NG reason:'+ data.reason);
+           }else{
+               jQuery( '#' + _show_id ).html( data );
+           }
+        }
+    } );
+}
+
+/**
+ *  * 引退馬コラム一覧表示
+ *   *
+ *    * @param  string  _show_id        表示ID
+ *     * @param  integer _limit          表示件数
+ *      **/
+function showRetirementHorseColumnList( _show_id, _limit )
+{
+  var _data = { pid : 'api_get_retirement_horse_column_list' };
+
+  _data.input   = 'UTF-8';
+  _data.output  = 'jsonp';
+
+  if ( ! _empty( _limit ) )
+  {
+    _data.limit = _limit;
+  }
+
+  $.ajax( { type     : 'GET', // POST だと上手くいかないのでとりあえずGET
+            url      : _newsapi_action_api_url,
+            data     : _data,
+            dataType : _data.output,
+            success  : function( data )
+                       {
+                         $( '#' + _show_id ).html( data );
+                       }
+          } );
+}
+
+/**
+ *  * ライターごとのコラム新着一覧表示
+ *   *
+ *    * @param  string  _show_id        表示ID
+ *     * @param  string  _writer_id      ライターID
+ *      * @param  integer _limit          表示件数
+ *       **/
+function showNewColumnWriterId( _show_id, _writer_id, _limit )
+{
+  var _data = { pid : 'api_get_new_column_writer_id' };
+
+  _data.input   = 'UTF-8';
+  _data.output  = 'jsonp';
+
+  if ( ! _empty( _limit ) )
+  {
+    _data.limit = _limit;
+  }
+  if ( ! _empty( _writer_id ) )
+  {
+    _data.writer_id = _writer_id;
+  }
+
+  $.ajax( { type     : 'GET', // POST だと上手くいかないのでとりあえずGET
+            url      : _newsapi_action_api_url,
+            data     : _data,
+            dataType : _data.output,
+            success  : function( data )
+                       {
+                         $( '#' + _show_id ).html( data );
+                       }
+          } );
+}
+
+/**
+ * ニュース一覧の表示(特集用)
+ *
+ * @param  string  _show_id         表示ID
+ * @param  integer _rank_type       1 新着
+ * @param  integer _category_id     ニュースは3固定
+ * @param  integer _subcategory_id  小カテゴリID
+ * @param  integer _limit
+ * @param  integer _page
+ * @param  integer _pager_type        'more_inner-n': 更に読み込む(n回で more_outer)
+ *                                    'more_outer'  : もっと見る(別ページリンク)
+ *                                    'pager'       : ページャ
+ * @param  integer _pager_url         'more_xxx'の際にリンクページおおびパラメータ
+ */
+function showNewsSpecialTop( _show_id, _rank_type, _category_id, _subcategory_id, _limit, _page, _pager_type, _pager_url, _pid_suffix, _id_list )
+{
+    var _data = { pid : 'api_get_news_special_top' };
+
+    _data.input             = 'UTF-8';
+    _data.output            = 'jsonp';
+    _data.show_id           = _show_id;
+    _data.rank_type         = _rank_type;
+    _data.category_id       = _category_id;
+    _data.subcategory_id    = _subcategory_id;
+
+    if( _limit )
+    {
+        _data.limit             = _limit;
+    }
+    if( _id_list )
+    {
+        _data.id_list             = _id_list;
+    }
+    _data.page              = _page;
+    _data.pager_type        = _pager_type;
+    _data.pager_url         = _pager_url;
+    if ( undefined != _pid_suffix ){
+        _data._pid_suffix = _pid_suffix;
+    }
+    jQuery.ajax( { type     : 'GET',
+        url      : _contents_action_api_url,
+        data     : _data,
+        dataType : _data.output,
+        success  : function( data )
+        {
+           if(data.status == 'NG'){
+               console.log('status:NG reason:'+ data.reason);
+           }else{
+               jQuery( '#' + _show_id ).html( data );
+           }
+        }
+    } );
+}

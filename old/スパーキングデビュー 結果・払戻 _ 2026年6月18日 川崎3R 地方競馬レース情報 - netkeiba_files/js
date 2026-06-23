@@ -1,0 +1,14 @@
+document.write('<script src=\"https://bypass.ad-stir.com/mk?p=162019\"><\/script>');
+(function() {
+  var nodes = document.getElementsByTagName('head');
+  var length = nodes.length;
+  if(nodes.length > 0) {
+    var iframe = document.createElement('iframe');
+    var server = 'https://tg.socdm.com';
+    iframe.src = server + "/aux/sosync";
+    iframe.width = 1;
+    iframe.height = 1;
+    (iframe.frameElement || iframe).style.cssText = 'position:absolute;border:none;padding:0;margin:0;display:none;visibility:hidden';
+    nodes[0].appendChild(iframe);
+  }
+})();

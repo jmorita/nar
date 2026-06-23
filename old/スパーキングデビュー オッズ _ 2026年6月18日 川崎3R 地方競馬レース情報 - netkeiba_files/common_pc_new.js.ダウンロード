@@ -1,0 +1,101 @@
+$(document).ready(function() {
+
+  if($('.ScrollUpLink').length) {
+    $('.ScrollUpLink').click(function(){
+      $('body,html').animate({
+        scrollTop: 0
+      }, 400);
+      return false;
+    })
+    $('.LinkRaceSummary a').click(function(e){
+        e.preventDefault();
+        var link = $(this).attr('href');
+        var positionElement = $(link).offset().top;
+        $('body,html').animate({
+          scrollTop : positionElement
+        },600);
+        return false;
+    })
+  }
+
+  //POPUP favorite horses - shutuba
+  if ($(".popup_link_04").length) {
+    $(".popup_link_04").colorbox({
+      iframe: true,
+      width: '98%',
+      height: '350px',
+      maxWidth: '600px',
+      transition: "none",
+      speed: '200',
+      title: false,
+    });
+  }
+  if ($(".cboxElement_Nologin").length) {
+    $(".cboxElement_Nologin").colorbox({
+      height: '270px',
+    });
+  }
+  // POPUP MAP
+  // 1. top/index.html
+  // 2. race/shutuba.html
+  if ($("a.Popup_Img").length) {
+    $("a.Popup_Img").colorbox();
+  }
+
+  doPositionSticky();
+  $(window).scroll(function () {
+    if ($(".InputFixedArea_Wrap").length) {
+      doPositionSticky();
+    }
+  });
+
+  var $slidespecial1 = $(".ReferenceRaceList,.ReferencePaddockList "),
+      $slidespecial2 = $(".SpecialPastResultsList,#list_yosoka_pickup ul, .RecentlyResultList01");
+  if ($slidespecial1.length) {
+    $slidespecial1.slick({
+        // autoplay: true,
+        autoplaySpeed: 5000,
+        dots: false,
+        // infinite: false,
+        speed: 300,
+        easing: 'swing',
+        slidesToShow: 2,
+        initialSlide: 0,
+        variableWidth: true,
+        prevArrow: '<div class="arrow-wrapper sl-left"><span class="prev"></span></div>',
+        nextArrow: '<div class="arrow-wrapper sl-right"><span class="next"></span></div>'
+    });
+     
+  }
+
+  if ($slidespecial2.length) {
+    $slidespecial2.slick({
+      // autoplay: true,
+      autoplaySpeed: 5000,
+      dots: false,
+      // infinite: false,
+      speed: 300,
+      easing: 'swing',
+      slidesToShow: 1,
+      initialSlide: 0,
+      variableWidth: true,
+      prevArrow: '<div class="arrow-wrapper sl-left"><span class="prev"></span></div>',
+      nextArrow: '<div class="arrow-wrapper sl-right"><span class="next"></span></div>'
+    });
+     
+  }
+
+});
+
+// Odds's Sticky
+function doPositionSticky() {
+  var footHeight = $('footer').outerHeight();
+  var scrollHeight = $(document).height();
+  var scrollPosition = $(window).height() + $(window).scrollTop();
+  if (scrollHeight - scrollPosition <= footHeight) {
+    $(".InputFixedArea01").removeClass("Sticky");
+  } else {
+    $(".InputFixedArea01").addClass("Sticky");  //Sticky status.
+    $('<div>').css('height', '123px');
+  }
+};

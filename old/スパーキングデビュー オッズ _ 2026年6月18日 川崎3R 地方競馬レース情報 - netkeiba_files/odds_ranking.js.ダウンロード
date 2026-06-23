@@ -1,0 +1,150 @@
+//===========================================================
+// 選択方式の表示切り替え処理
+//===========================================================
+// function SwitchingDisplay(type,housiki)
+// {
+// 	location.href = "?type=" + type + "&race_id=" + _odds_ranking_page_race_id + "&housiki=" + housiki + "#odds_menu";
+// }
+
+//===========================================================
+// Docment Readyになったときに処理するもの
+//===========================================================
+$(document).ready(function ()
+{
+    //枠単のときはチェックと金額入力の導線を消す
+    //→発売できるようになるまで
+    var query = location.search.replace(/^\?/, '').split('&');
+    var ary_q = {};
+    for(var i=0; i<query.length; i++){
+    var q = query[i].split('=');
+    ary_q[q[0]] = q[1];
+    }
+    if(undefined != ary_q['type'])
+    {
+		if( ary_q['type']=='b9' )
+		{
+            $("#menu_check").remove();
+            $("#bet_window").remove();
+            $("[id^='menu_check_b9_']").each(function()
+        	{
+        		$(this).remove();
+            });
+		}
+    }
+
+	//オッズ表示時の買い目チェック
+	// cart_get_itemlist( _odds_ranking_cart_group_bet, init_select_kaime_ranking );
+});
+
+//===========================================================
+// オッズ検索結果にて、
+// すでにチェック済みの買い目にチェックを入れる
+// in: _cart       = cart_get_itemlist()の戻り(item_id)
+//     _aryID['0'] = チェック対象のchkboxのidタグ検索キー
+//===========================================================
+function init_select_kaime_ranking( _cart )
+{
+    console.log('init_select_kaime');
+
+
+    $("[id^='check_']").each(function()
+	{
+		var chkbox 	= $(this);
+		var count 	= chkbox.val();
+
+	    // console.log('chk_val='+count);
+
+	    for(var item_id in _cart)
+		{
+    // console.log('itemid='+item_id);
+
+			if (item_id == count)
+			{// すでにチェック済みの買い目と一致したとき
+
+				chkbox.prop("checked", true);	// 該当chkboxをチェック
+				chkbox.parent().parent().addClass('Selected');
+			}
+	    }
+    });
+	view_check_count_ranking();		// チェック数をカウント(初期表示)
+}
+
+//------------------------------------------------------------
+// 買い目点数のカウント・表示
+//------------------------------------------------------------
+function view_check_count_ranking()
+{
+    var cnt = 0;
+    $("[id^='check_']").each(function()
+	{
+		var chkbox = $(this);
+		if ( chkbox.prop("checked") == true )
+		{
+			cnt++;
+		}
+    });
+    console.log('view_check_count _cnt='+cnt);
+    $('#odds_select').text( cnt);
+
+    var limit = '50';
+    var cookie = document.cookie.split(';');
+    for(var i = 0; i < cookie.length; i++){
+        var item = cookie[i].split('=');
+        //投票モード確認
+        if(item[0].trim() === 'bet_mode' && item[1].trim() === 'spat4'){
+            limit = '120';
+        }
+    }
+    var err_text = '件数オーバー(1度の投票は'+limit+'件まで)';
+
+    //51件以上の買い目が選択されている場合はアラートメッセージ
+    if(cnt>limit)
+    {
+        $('#caution_50bet').css("display", "block");
+        $('#caution_50bet > font').text(err_text);
+    }
+    else
+    {
+        $('#caution_50bet').css("display", "none");
+    }
+}
+
+function update_cart_checkbox_ranking( _group, _item_id, _item_value, _client_data, _checked, id )
+{
+    console.log('update_cart_checkbox');
+	var ele_id = "check_"+id;
+    if(true == _checked){
+		cart_add_item( _group, _item_id, _item_value, '', _client_data );
+		$(this).each(function() {
+			$("#"+ele_id).parent().parent().addClass('Selected');
+		});
+    }else{
+		cart_remove_item( _group, _item_id );
+		$(this).each(function() {
+			
+			$("#"+ele_id).parent().parent().removeClass('Selected');
+		});
+    }
+}
+
+// function view_3odds()
+// {
+// 	umaban = $('#ninki_select').attr('value');
+// 	location.href = "?pid=odds_view&type=" + _odds_ranking_bet_type + "&race_id=" + _odds_ranking_page_race_id + "&housiki=c99&ninki=" + umaban + "#housiki_select";
+// }
+
+// $(function() {
+//     $('.HorseCheck_Select').click(function() {
+//     	if ($(this).prop('checked')) {
+//     		$(this).each(function() {
+// 				$("#"+ele_id).parent().parent().addClass('Selected');
+//     			$(this).parent().parent().addClass('Selected');
+//     		});
+//     	} else {
+//     		$(this).each(function() {
+//     			$(this).parent().parent().removeClass('Selected');
+//     		});
+//     	}
+//     });
+// });
+

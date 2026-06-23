@@ -1,0 +1,38 @@
+
+//
+// netkeiba_monthly_goods_cd cookieをブラウザに設定する
+//
+// 有効期限は30分 (だいたい決済購入完了までにかかりそうな最長時間)
+// 使い方
+//
+// id="netkeiba_monthly_goods_cd_xxx" xxxはなんでも可 
+// data-theme=xxxx
+//
+// 各templateのalinkに設定すること これにより「どこから買ったか」をcookieに設定することができます
+// 購入完了時に、このクッキーを削除します。
+// 
+
+$(document).on( 'click', '[id^="a_monthly_goods_link_"]', function(){
+    console.log('onClick Event monthly_goods_link Start');
+    var target_id = $(this).prop('id').replace(/a_monthly_goods_link_/,'');
+    var monthly_goods_cd = $('#a_monthly_goods_link_' + target_id ) .attr('data-theme');
+    if( monthly_goods_cd != "" )
+    {
+        set_monthly_goods_cookie( monthly_goods_cd );
+    }
+});
+
+//
+// cookie設定 expireを使用 max-ageは使わない
+// IE11の人のため
+//
+function set_monthly_goods_cookie( monthly_goods_cd )
+{
+    var limit_time = new Date().getTime() + 30*60*1000;   //cookieの期限（今回は30分 1000を掛けているのは単位合わせ）
+    var tmp_date = new Date( limit_time ).toUTCString();
+    var mdomain = document.domain.substr( document.domain.lastIndexOf(".netkeiba") );
+    var cookie_str = 'netkeiba_monthly_goods_cd=' + monthly_goods_cd + ';domain=' + mdomain +';path=/;expires=' + tmp_date;
+    //var cookie_str = 'netkeiba_monthly_goods_cd=' + monthly_goods_cd + '; domain=' + mdomain +'; max-age=30*60';
+    console.log('cookie(%s)', cookie_str );
+    document.cookie = cookie_str;
+}

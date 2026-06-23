@@ -1,0 +1,835 @@
+$(document).ready(function ()
+{
+    if (typeof _odds_form_bet_type != "undefined") {
+        $("#nagasi_b6").css("display", "none");
+        $("#nagasi_b7").css("display", "none");
+        $("#nagasi_b8").css("display", "none");
+
+        //流し指定枠の表示制御
+        switch (_odds_form_bet_type + _odds_form_housiki)
+        {
+        case 'b6c3':
+        case 'b6c4':
+        case 'b6c5':
+            $("#nagasi_b6").css("display", "block");
+            break;
+        case 'b7c3':
+        case 'b7c6':
+            $("#nagasi_b7").css("display", "block");
+            break;
+        case 'b8c3':
+        case 'b8c4':
+        case 'b8c5':
+        case 'b8c6':
+        case 'b8c7':
+        case 'b8c8':
+            $("#nagasi_b8").css("display", "block");
+        default:
+            //流し以外では、指定枠を消す
+            break;
+        }
+        //MY印の初期値
+        // cart_get_itemlist( _odds_form_cart_group_horse, init_select_mark_form );
+        $('#kumiawase_kensu').text( calc_tensu(_odds_form_bet_type,_odds_form_housiki) );
+        $('#select_kumiawase').text( select_kumiawase_form(_odds_form_bet_type,_odds_form_housiki) );
+    }
+});
+
+//===========================================================
+// MY印の初期値をセットする
+// in: _cart  ...cart_get_itemlist()の戻り(item_id)
+//===========================================================
+function init_select_mark_form( _cart )
+{
+    console.log('init_select_mark_form');
+
+    var ary_mark = new Array();
+
+	// 該当レースで選択されたMY印を取得
+    for(var item_id in _cart)
+	{
+		var tmp = _cart[item_id]['_cd'];
+		var mark = tmp.split('_');
+		if ('1' in mark)
+		{
+			ary_mark[ item_id ] = mark[1];	//重み印モードのとき
+		}
+		else
+		{
+			ary_mark[ item_id ] = 100;		//チェックモードのとき
+		}
+		console.log('item_id='+item_id+' client_data='+ary_mark[ item_id ]);
+    }
+
+	// ユーザーのMY印をセット
+    $("[id^='mymark_']").each(function()
+	{ // ドキュメント内のMY印の選択ボックスの数だけループ
+
+		var box 		= $(this);
+		var tmp_seq 	= box[0].id;			//seq
+		var seq 	= tmp_seq.split('_');
+		var mark_data 	= ary_mark[seq[1]];
+		if (!mark_data || mark_data == 0) mark_data = '00';
+
+		$(this).parent().removeClass('MarkIcon Mark00');
+		$(this).parent().addClass('MarkIcon Mark'+mark_data);
+		$(this).attr('value', mark_data);
+    });
+
+}
+
+//------------------------------------------------------------
+// 指定したidのチェックボックスを全設定・全解除する
+//------------------------------------------------------------
+function chkBoxAllset(chkid1)
+{
+    $("[id^='"+chkid1+"']").each(function()
+	{
+		var chkbox1 = $(this);
+		var count = chkbox1.val();
+		var rdchk1 = $(':radio[name="jiku1"]:checked').val();
+		var rdchk2 = $(':radio[name="jiku2"]:checked').val();
+
+		if (rdchk1 == undefined && rdchk2 == undefined)
+		{
+			chkbox1.prop("checked", true);	//チェックボックスをON/OFFにする
+		}
+		else
+		{
+			if ( rdchk1 != count && rdchk2 != count)
+			{
+				chkbox1.prop("checked", true);
+			}
+		}
+	});
+}
+
+function chkBoxAllClr(chkid1)
+{
+    $("[id^='"+chkid1+"']").each(function()
+	{
+		var chkbox1 = $(this);
+		chkbox1.prop("checked", false);	//チェックボックスをON/OFFにする
+	});
+}
+
+//===========================================================
+// 「MY印の馬を選択」を押したときに実行される処理
+//
+// MY印が設定されている馬に対応するchkboxをONにする
+// ただし、--と消 の馬にはOFFを設定
+//
+// in: selbtn       = 選択boxのid
+//===========================================================
+function setMySirusi(selbtn)
+{
+    console.log('setMySirusi');
+
+    $("[id^='"+selbtn+"']").each(function()
+	{
+		var chkbox = $(this);
+		chkbox.prop("checked", false);
+	});
+
+	var mark_count=0;
+	// ユーザーのMY印
+    $("[id^='mymark_']").each(function()
+	{ // ドキュメント内のMY印の選択ボックスの数だけループ
+
+		var select 		= $(this);
+		var tmp_seq 	= select[0].id;			//seq
+		var mark 	= $(this).attr('value');		//umaban,mark
+		var seq 	= tmp_seq.split('_');
+
+		if ( $('#rd_jiku1_'+seq[1]).prop("checked") != true &&  $('#rd_jiku2_'+seq[1]).prop("checked") != true )
+		{// 該当馬が軸馬として指定されていないとき
+
+			if(mark != 0 && mark != 99 && mark != undefined)
+			{// -- でも 消 でもない => チェックつける
+				$('#'+ selbtn + seq[1]).prop("checked", true);
+				mark_count++;
+			}
+			else
+			{// チェック消す
+				$('#'+ selbtn + seq[1]).prop("checked", false);
+			}
+		}
+	});
+}
+
+function rdClr(rdid)
+{
+    $("[id^='"+rdid+"']").each(function()
+	{
+		var rdid = $(this);
+		rdid.prop("checked", false);	//チェックボックスをON/OFFにする
+	});
+}
+
+function chkSameJiku_Aite(_seq,rdbtn)
+{
+	$('#chk_frm1_' + _seq).prop("checked", false);
+	$('#chk_frm2_' + _seq).prop("checked", false);
+	$('#chk_frm3_' + _seq).prop("checked", false);
+	$('#rd_jiku1_' + _seq).prop("checked", false);
+	$('#rd_jiku2_' + _seq).prop("checked", false);
+	$('#' + rdbtn + _seq).prop("checked", true);
+}
+function chkSameAite_Jiku(_seq)
+{
+	if ( $('#rd_jiku1_' + _seq).prop("checked") == true || $('#rd_jiku2_' + _seq).prop("checked") == true )
+	{
+		$('#chk_frm1_' + _seq).prop("checked", false);
+	}
+}
+
+function initEventsOddsForm() {
+	//=================================================
+	//買い目リストのチェック時に実行
+	//=================================================
+	$("[id^='btn_mymark']").on("click", function(){
+		if ( $(this).prop("checked")==true )
+		{
+			var data	= $(this);
+			var tmp_seq = data[0].id;			//seq
+			var seq 	= tmp_seq.split('_');
+
+			setMySirusi('chk_frm' + seq[2] + '_');
+
+			$("#btn_sel_"+ seq[2]).prop("checked", false);
+
+		}
+		else
+		{
+			$(this).prop("checked", true);
+		}
+        $('#kumiawase_kensu').text( calc_tensu(_odds_form_bet_type,_odds_form_housiki) );
+        $('#select_kumiawase').text( select_kumiawase_form(_odds_form_bet_type,_odds_form_housiki) );
+	});
+
+	$("[id^='btn_sel']").on("click", function(){
+		if ( $(this).prop("checked")==true )
+		{
+			var data	= $(this);
+			var tmp_seq = data[0].id;			//seq
+			var seq 	= tmp_seq.split('_');
+
+			chkBoxAllset('chk_frm' + seq[2] + '_');
+
+			$("#btn_mymark_"+ seq[2]).prop("checked", false);
+		}
+		else
+		{
+			$(this).prop("checked", true);
+		}
+        $('#kumiawase_kensu').text( calc_tensu(_odds_form_bet_type,_odds_form_housiki) );
+        $('#select_kumiawase').text( select_kumiawase_form(_odds_form_bet_type,_odds_form_housiki) );
+	});
+
+	$("[id^='btn_clr']").on("click", function(){
+		var data	= $(this);
+		var tmp_seq = data[0].id;			//seq
+		var seq 	= tmp_seq.split('_');
+
+		chkBoxAllClr('chk_frm' + seq[2] + '_');
+        rdClrWaku('rd_jiku');
+
+		if(seq[3] != undefined)
+		{
+			rdClr('rd_jiku' + seq[3] + '_');
+		}
+		if(seq[4] != undefined)
+		{
+			rdClr('rd_jiku' + seq[4] + '_');
+		}
+
+		$("#btn_mymark_"+ seq[2]).prop("checked", false);
+		$("#btn_sel_"+ seq[2]).prop("checked", false);
+        $('#kumiawase_kensu').text( calc_tensu(_odds_form_bet_type,_odds_form_housiki) );
+        $('#select_kumiawase').text( select_kumiawase_form(_odds_form_bet_type,_odds_form_housiki) );
+	});
+
+	$("[id^='chk_']").on("click", function(){
+		var data	= $(this);
+		var tmp_seq = data[0].id;			//seq
+		var seq 	= tmp_seq.split('_');
+
+		switch(seq[1])
+		{
+		case 'frm1':
+			$("#btn_mymark_1").prop("checked", false);
+			$("#btn_sel_1").prop("checked", false);
+			break;
+		case 'frm2':
+			$("#btn_mymark_2").prop("checked", false);
+			$("#btn_sel_2").prop("checked", false);
+			break;
+		case 'frm3':
+			$("#btn_mymark_3").prop("checked", false);
+			$("#btn_sel_3").prop("checked", false);
+			break;
+		}
+        $('#kumiawase_kensu').text( calc_tensu(_odds_form_bet_type,_odds_form_housiki) );
+        $('#select_kumiawase').text( select_kumiawase_form(_odds_form_bet_type,_odds_form_housiki) );
+	});
+
+	$("[id^='rd_jiku']").on("click", function(){
+		var data	= $(this);
+		var tmp_seq = data[0].id;			//seq
+		var seq 	= tmp_seq.split('_');
+
+		$("#btn_mymark_1").prop("checked", false);
+		$("#btn_sel_1").prop("checked", false);
+        $('#kumiawase_kensu').text( calc_tensu(_odds_form_bet_type,_odds_form_housiki) );
+        $('#select_kumiawase').text( select_kumiawase_form(_odds_form_bet_type,_odds_form_housiki) );
+	});
+
+
+};
+
+function calc_tensu(_kind,_type)
+{
+    console.log('calc_tensu');
+
+    switch(_type)
+    {
+    //フォーメーション点数計算
+    case 'c1':
+        var frm1 = []; //[];
+        var frm2 = []; //[];
+        var frm3 = []; //[];
+        var active_waku = []; //[];
+        var i=0;
+        
+        i=0;
+        $("[id^='chk_frm1']").each(function()
+    	{
+    		var chkbox = $(this);
+    		if ( chkbox.prop("checked") == true )
+    		{
+                frm1[i++]=$(this).val();
+    		}
+        });
+        i=0;
+        $("[id^='chk_frm2']").each(function()
+    	{
+    		var chkbox = $(this);
+    		if ( chkbox.prop("checked") == true )
+    		{
+                frm2[i++]=$(this).val();
+    		}
+        });
+        i=0;
+        $("[id^='chk_frm3']").each(function()
+    	{
+    		var chkbox = $(this);
+    		if ( chkbox.prop("checked") == true )
+    		{
+                frm3[i++]=$(this).val();
+    		}
+        });
+
+        var ten_count = [];
+        var kumi = [];
+
+        switch(_kind)
+        {
+        case 'b4':
+        case 'b5':
+            for ( var w1=0, len1 = frm1.length; w1<len1; w1++ )
+            {
+                for ( var w2=0, len2 = frm2.length; w2<len2; w2++ )
+                {
+                    if (frm1[w1] != frm2[w2])
+                    {
+                        kumi[0] = frm1[w1];
+                        kumi[1] = frm2[w2];
+                        kumi.sort();
+                        ten_count[ kumi[0] + "-" + kumi[1] ] = 1;
+                    }
+                }
+            }
+            break;
+        case 'b6':
+            for ( var w1=0, len1 = frm1.length; w1<len1; w1++ )
+            {
+                for ( var w2=0, len2 = frm2.length; w2<len2; w2++ )
+                {
+                    if (frm1[w1] != frm2[w2])
+                    {
+                        kumi[0] = frm1[w1];
+                        kumi[1] = frm2[w2];
+                        ten_count[ kumi[0] + "-" + kumi[1] ] = 1;
+                    }
+                }
+            }
+            break;
+        case 'b7':
+            for ( var w1=0, len1 = frm1.length; w1<len1; w1++ )
+            {
+                for ( var w2=0, len2 = frm2.length; w2<len2; w2++ )
+                {
+                    for ( var w3=0, len3 = frm3.length; w3<len3; w3++ )
+                    {
+                        if (frm1[w1] != frm2[w2] && frm1[w1] != frm3[w3] && frm2[w2] != frm3[w3])
+                        {
+                            kumi[0] = frm1[w1];
+                            kumi[1] = frm2[w2];
+                            kumi[2] = frm3[w3];
+                            kumi.sort();
+                            ten_count[ kumi[0] + "-" + kumi[1] + "-" + kumi[2] ] = 1;
+                        }
+                    }
+                }
+            }
+            break;
+        case 'b8':
+            for ( var w1=0, len1 = frm1.length; w1<len1; w1++ )
+            {
+                for ( var w2=0, len2 = frm2.length; w2<len2; w2++ )
+                {
+                    for ( var w3=0, len3 = frm3.length; w3<len3; w3++ )
+                    {
+                        if (frm1[w1] != frm2[w2] && frm1[w1] != frm3[w3] && frm2[w2] != frm3[w3])
+                        {
+                            kumi[0] = frm1[w1];
+                            kumi[1] = frm2[w2];
+                            kumi[2] = frm3[w3];
+                            ten_count[ kumi[0] + "-" + kumi[1] + "-" + kumi[2] ] = 1;
+                        }
+                    }
+                }
+            }
+            break;
+        }
+        console.log(Object.keys(ten_count).length);
+        return Object.keys(ten_count).length;
+
+        break;
+        
+    //ボックス点数計算
+    case 'c2':
+        var frm1 = []; //[];
+        var i=0;
+        
+        i=0;
+        $("[id^='chk_frm1']").each(function()
+    	{
+    		var chkbox = $(this);
+    		if ( chkbox.prop("checked") == true )
+    		{
+                frm1[i++]=$(this).val();
+    		}
+        });
+
+        var ten_count = 0;
+        switch(_kind)
+        {
+        case 'b4':
+        case 'b5':
+            if (frm1.length>=2)
+            {
+                ten_count = frm1.length * (frm1.length-1)/2;
+            }
+            console.log(ten_count);
+            return ten_count;
+            break;
+        case 'b6':
+            if (frm1.length>=2)
+            {
+                ten_count = frm1.length * (frm1.length-1);
+            }
+            console.log(ten_count);
+            return ten_count;
+            break;
+        case 'b7':
+            if (frm1.length>=3)
+            {
+                ten_count = frm1.length * (frm1.length-1) * (frm1.length-2)/6;
+            }
+            console.log(ten_count);
+            return ten_count;
+            break;
+        case 'b8':
+            if (frm1.length>=3)
+            {
+                ten_count = frm1.length * (frm1.length-1) * (frm1.length-2);
+            }
+            console.log(ten_count);
+            return ten_count;
+            break;
+        }
+        console.log(ten_count);
+        return ten_count;
+        break;
+
+    //流し点数計算
+    default:
+        var jiku1 = []; //[];
+        var jiku2 = []; //[];
+        var frm1 = []; //[];
+        var i=0;
+
+        $("[id^='chk_frm1']").each(function()
+    	{
+    		var chkbox = $(this);
+    		if ( chkbox.prop("checked") == true )
+    		{
+                frm1[i++]=$(this).val();
+    		}
+        });
+        $("[id^='rd_jiku1_']").each(function()
+    	{
+    		var chkbox = $(this);
+    		if ( chkbox.prop("checked") == true )
+    		{
+                jiku1[0]=$(this).val();
+    		}
+        });
+        $("[id^='rd_jiku2_']").each(function()
+    	{
+    		var chkbox = $(this);
+    		if ( chkbox.prop("checked") == true )
+    		{
+                jiku2[0]=$(this).val();
+    		}
+        });
+
+        var mult_flg = '';
+        $("[id^='chk_multi']").each(function()
+    	{
+    		var chkbox = $(this);
+    		if ( chkbox.prop("checked") == true )
+    		{
+                mult_flg = 1;
+    		}
+        });
+
+        var ten_count = 0;
+        switch(_type + _kind + mult_flg)
+        {
+        case 'c3b4':
+        case 'c3b5':
+        case 'c3b6':
+            if(jiku1[0]!=null)
+            {
+                ten_count = frm1.length;
+            }
+            console.log(ten_count);
+            return ten_count;
+            break;
+        case 'c3b6':
+        case 'c4b6':
+            if(jiku1[0]!=null)
+            {
+                ten_count = frm1.length;
+            }
+            console.log(ten_count);
+            return ten_count;
+            break;
+        case 'c3b61':
+        case 'c4b61':
+            if(jiku1[0]!=null)
+            {
+                ten_count = frm1.length*2;
+            }
+            console.log(ten_count);
+            return ten_count;
+            break;
+        case 'c3b7':
+            if(jiku1[0]!=null && frm1.length>=2)
+            {
+                ten_count = frm1.length * (frm1.length-1)/2;
+            }
+            console.log(ten_count);
+            return ten_count;
+            break;
+        case 'c6b7':
+            if(jiku1[0]!=null && jiku2[0]!=null && frm1.length>=1)
+            {
+                ten_count = frm1.length;
+            }
+            console.log(ten_count);
+            return ten_count;
+            break;
+        case 'c3b8':
+        case 'c4b8':
+        case 'c5b8':
+            if(jiku1[0]!=null && frm1.length>=2)
+            {
+                ten_count = frm1.length * (frm1.length-1);
+            }
+            console.log(ten_count);
+            return ten_count;
+            break;
+        case 'c3b81':
+        case 'c4b81':
+        case 'c5b81':
+            if(jiku1[0]!=null && frm1.length>=2)
+            {
+                ten_count = frm1.length * (frm1.length-1)*3;
+            }
+            console.log(ten_count);
+            return ten_count;
+            break;
+        case 'c6b8':
+        case 'c7b8':
+        case 'c8b8':
+            if(jiku1[0]!=null && jiku2[0]!=null && frm1.length>=1)
+            {
+                ten_count = frm1.length;
+            }
+            console.log(ten_count);
+            return ten_count;
+            break;
+        case 'c6b81':
+        case 'c7b81':
+        case 'c8b81':
+            if(jiku1[0]!=null && jiku2[0]!=null && frm1.length>=1)
+            {
+                ten_count = frm1.length*6;
+            }
+            console.log(ten_count);
+            return ten_count;
+            break;
+        }
+        console.log(ten_count);
+        return ten_count;
+        break;
+    }
+}
+
+
+function select_kumiawase_form(_kind,_type)
+{
+    console.log('select_kumiawase_form');
+    var dsp_kumi;
+    var dsp_kaime;
+
+    var jiku1 = []; //[];
+    var jiku2 = []; //[];
+    var frm1 = []; //[];
+    var frm2 = []; //[];
+    var frm3 = []; //[];
+    var i=0;
+    var mult_flg = '';
+
+    // var ary_kind = {b4:"馬連 ",b5:"ワイド ",b6:"馬単 ",b7:"３連複 ",b8:"３連単 "};
+    var ary_kind = { b4: (TEXT_DICT_ ? TEXT_DICT_['UMAREN']:"馬連") + " ",
+        b5: (TEXT_DICT_?TEXT_DICT_['WIDE']:"ワイド") + " ",
+        b6: (TEXT_DICT_?TEXT_DICT_['UMATAN']:"馬単") + " ",
+        b7: (TEXT_DICT_?TEXT_DICT_['3FUKU']:"３連複") + " ",
+        b8: (TEXT_DICT_?TEXT_DICT_['3TAN']:"３連単") + " ",
+    };
+    i=0;
+    $("[id^='chk_frm1']").each(function()
+	{
+		var chkbox = $(this);
+		if ( chkbox.prop("checked") == true )
+		{
+            frm1[i++]=$(this).val();
+		}
+    });
+    i=0;
+    $("[id^='chk_frm2']").each(function()
+	{
+		var chkbox = $(this);
+		if ( chkbox.prop("checked") == true )
+		{
+            frm2[i++]=$(this).val();
+		}
+    });
+    i=0;
+    $("[id^='chk_frm3']").each(function()
+	{
+		var chkbox = $(this);
+		if ( chkbox.prop("checked") == true )
+		{
+            frm3[i++]=$(this).val();
+		}
+    });
+    $("[id^='rd_jiku1_']").each(function()
+	{
+		var chkbox = $(this);
+		if ( chkbox.prop("checked") == true )
+		{
+            jiku1[0]=$(this).val();
+		}
+    });
+    $("[id^='rd_jiku2_']").each(function()
+	{
+		var chkbox = $(this);
+		if ( chkbox.prop("checked") == true )
+		{
+            jiku2[0]=$(this).val();
+		}
+    });
+
+    $("[id^='chk_multi']").each(function()
+	{
+		var chkbox = $(this);
+		if ( chkbox.prop("checked") == true )
+		{
+            mult_flg = 1;
+		}
+    });
+
+
+    dsp_kumi = '';
+    if (_type == "c99") {
+        dsp_kumi = ary_kind[_kind];
+    }
+    // dsp_kumi = ary_kind[_kind];
+    dsp_kaime = '';
+
+    switch(_kind + _type)
+    {
+    //フォーメーション点数計算
+    case 'b4c1':
+    case 'b5c1':
+    case 'b6c1':
+        // dsp_kumi += "フォーメーション";
+        dsp_kumi += ary_kind[_kind] + (TEXT_DICT_?TEXT_DICT_['FORMATION']:"フォーメーション");
+        dsp_kaime += '<tr><th><div>'+$("#conf_frm1")[0].innerHTML+'</div></th><td class="Num">' + make_rectangle_number(frm1) + "</td></tr>";
+        dsp_kaime += '<tr><th><div>'+$("#conf_frm2")[0].innerHTML+'</div></th><td class="Num">' + make_rectangle_number(frm2) + "</td></tr>";
+        break;
+    case 'b7c1':
+    case 'b8c1':
+        // dsp_kumi += "フォーメーション";
+        dsp_kumi += ary_kind[_kind] + (TEXT_DICT_?TEXT_DICT_['FORMATION']:"フォーメーション");
+        dsp_kaime += '<tr><th><div>'+$("#conf_frm1")[0].innerHTML + '</div></th><td class="Num">' + make_rectangle_number(frm1) + "</td></tr>";
+        dsp_kaime += '<tr><th><div>'+$("#conf_frm2")[0].innerHTML + '</div></th><td class="Num">' + make_rectangle_number(frm2) + "</td></tr>";
+        dsp_kaime += '<tr><th><div>'+$("#conf_frm3")[0].innerHTML + '</div></th><td class="Num">' + make_rectangle_number(frm3) + "</td></tr>";
+        break;
+
+    case 'b4c2':
+    case 'b5c2':
+    case 'b6c2':
+    case 'b7c2':
+    case 'b8c2':
+        // dsp_kumi += "ボックス";
+        dsp_kumi += ary_kind[_kind] + (TEXT_DICT_?TEXT_DICT_['BOX']:"ボックス");
+        dsp_kaime += '<tr class="Box"><th><div>'+$("#conf_frm1")[0].innerHTML + '</div></th><td class="Num">' + make_rectangle_number(frm1) + "</td></tr>";
+        break;
+        
+    case 'b4c3':
+    case 'b5c3':
+    case 'b6c3':
+    case 'b6c4':
+    case 'b7c3':
+    case 'b8c3':
+    case 'b8c4':
+    case 'b8c5':
+        // dsp_kumi += "ながし";
+        dsp_kumi += ary_kind[_kind] + (TEXT_DICT_?TEXT_DICT_['NAGASHI']:"ながし");
+        dsp_kaime += '<tr><th><div>'+$("#conf_jiku1")[0].innerHTML + '</div></th><td class="Num">' + make_rectangle_number(jiku1) + "</td></tr>";
+        dsp_kaime += '<tr><th><div>'+$("#conf_frm1")[0].innerHTML + '</div></th><td class="Num">' + make_rectangle_number(frm1) + "</td></tr>";
+        if(mult_flg)
+        {
+            // dsp_kaime += '<tr><th><div>type</div></th><td class="Num"><div>マルチ</div></td></tr>';
+            dsp_kaime += '<tr><th><div>type</div></th><td class="Num"><div>'+(TEXT_DICT_?TEXT_DICT_['MULTI']:"マルチ")+'</div></td></tr>';
+        }
+        break;
+    case 'b7c6':
+    case 'b8c6':
+    case 'b8c7':
+    case 'b8c8':
+        // dsp_kumi += "ながし";
+        dsp_kumi += ary_kind[_kind] + (TEXT_DICT_?TEXT_DICT_['NAGASHI']:"ながし");
+        dsp_kaime += '<tr><th><div>'+$("#conf_jiku1")[0].innerHTML + '</div></th><td class="Num">' + make_rectangle_number(jiku1) + "</td></tr>";
+        dsp_kaime += '<tr><th><div>'+$("#conf_jiku2")[0].innerHTML + '</div></th><td class="Num">' + make_rectangle_number(jiku2) + "</td></tr>";
+        dsp_kaime += '<tr><th><div>'+$("#conf_frm1")[0].innerHTML + '</div></th><td class="Num">' + make_rectangle_number(frm1) + "</td></tr>";
+        if(mult_flg)
+        {
+            dsp_kaime += '<tr><th><div>type</div></th><td class="Num"><div>'+(TEXT_DICT_?TEXT_DICT_['MULTI']:"マルチ")+'</div></td></tr>';
+            // dsp_kaime += '<tr><th><div>type</div></th><td class="Num"><div>マルチ</div></td></tr>';
+        }
+        break;
+    }
+    
+    $("#select_type")[0].innerHTML = dsp_kumi;
+    $("#select_kumiawase").html("<table>"+ dsp_kaime + "</table>");
+}
+
+
+
+//=================================================
+//　点数表示
+//=================================================
+
+$(function() {
+    var length = $('.HorseCheck_Select').length;
+
+    $('[id*="rd_jiku"], .HorseCheck_Select, .Mark_Action, .All_Action, .Cancel_Action, .MultiCheck').click(function() {
+		var scroll = $(window).scrollTop();
+		var windowH = $(window).height();
+		// var target = $('.Selected_Block').offset().top + 130;
+		// if (scroll + windowH <= target)
+		// {
+        //     var kumi = $('#kumiawase_kensu').text();
+        //     $('.View_Count').html('<span style="font-size:12px; font-weight: normal;">組み合わせ</span><br>' + kumi + '点').fadeIn();
+		// }
+    });
+
+    $('.HorseCheck_Select').click(function() {
+    	var check = ($('.HorseCheck_Select:checked').length);
+		if (check == 0) {
+            $('.View_Count').fadeOut();
+        }
+    });
+
+    $('.Cancel_Action, .SubmitBtn').click(function() {
+        $('.View_Count').fadeOut();
+    });
+
+	var hash = location.hash;
+	if (hash == '#housiki_select2') {
+        var kumi = $('#kumiawase_kensu').text();
+        if(kumi!="0")
+        {
+    		$('#message_odds_form').css("display", "block");
+    		$('#msg_setinfo').css("display", "none");
+    	}
+	}
+	
+});
+
+(function($) {
+	// $(window).scroll(function() {
+	// 	var scroll = $(this).scrollTop();
+	// 	var windowH = $(window).height();
+	// 	var target = $('.Selected_Block').offset().top + 130;
+	// 	if (scroll + windowH > target)
+	// 	{
+	// 		$('.View_Count').fadeOut();
+	// 	}
+	// 	else
+	// 	{
+    //     	var check = ($('.HorseCheck_Select:checked').length);
+    // 		if (check > 0 && w_check++>0) {
+    //             var kumi = $('#kumiawase_kensu').text();
+    //             $('.View_Count').html('<span style="font-size:12px; font-weight: normal;">組み合わせ</span><br>' + kumi + '点').fadeIn();
+    //         }
+	// 	}
+	// });
+})(jQuery);
+
+
+//
+// 数字を□囲みに書き換える
+//
+function make_rectangle_number(ary_number)
+{
+    var html_tmp="";
+    for (var i = 0; i < ary_number.length; i ++) {
+        // html_tmp += '<span class="UmaBan">'+ary_number[i]+'</span>';
+        if (i>0) {
+            html_tmp += '<span class="BackSlash">/</span>' + ary_number[i];
+        } else {
+            html_tmp += ary_number[i];
+        }
+    }
+    return html_tmp;
+}
+
+
