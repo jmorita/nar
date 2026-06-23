@@ -264,15 +264,21 @@ SHUTSUBA_DIR = DATA_ROOT / 'shutsuba'
 
 
 def resolve_race_info(race_id: str) -> dict:
-    \"\"\"race_id → {venue, race_num, race_date, place_id}\"\"\"
+    \"\"\"race_id → {venue, race_num, race_date, place_id (= SPAT4 JOCD)}
+
+    SPAT4 PLACEIDR (= JOCD 2桁) は 楽天 18桁 race_id の position 8:10 から直接抽出可能。
+    例:
+      浦和 R5 (race_id=202606231813030205) → JOCD=18
+      金沢 (race_id=2026...2218..)         → JOCD=22
+      帯広 (race_id=2026...0304..)         → JOCD=03
+    \"\"\"
     info = {'race_id': race_id}
-    # netkeiba 12 桁: YYYY VV MMDD RR
-    # 楽天 18 桁:    YYYY MMDD VVVV KK NN RR
     if len(race_id) == 12:
+        # netkeiba 12 桁 (旧データ用、L901 互換): YYYY VV MMDD RR
         info['race_date'] = f'{race_id[:4]}-{race_id[6:8]}-{race_id[8:10]}'
         info['race_num']  = int(race_id[10:12])
-        # 場名は shutsuba CSV からlookup (netkeiba 12 桁データはここに保存される)
     elif len(race_id) == 18:
+        # 楽天 18 桁: YYYY MMDD VVVV KK NN RR
         info['race_date'] = f'{race_id[:4]}-{race_id[4:6]}-{race_id[6:8]}'
         info['race_num']  = int(race_id[16:18])
     else:
@@ -293,7 +299,11 @@ def resolve_race_info(race_id: str) -> dict:
     else:
         info['venue'] = '?'
 
-    info['place_id'] = spat4.venue_to_place_id(info['venue'])
+    # place_id (= SPAT4 PLACEIDR / JOCD): 18 桁 race_id から直接抽出を優先
+    if len(race_id) == 18:
+        info['place_id'] = race_id[8:10]   # JOCD = VVVV の先頭 2 桁
+    else:
+        info['place_id'] = spat4.venue_to_place_id(info['venue'])
     return info
 """)
 
