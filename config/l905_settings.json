@@ -10,22 +10,22 @@
   },
 
   "betting": {
-    "_comment": "stake_yen は 1 買い目あたりの賭け金 (100 円単位)",
     "stake_yen": 100,
-    "dry_run": false,
-    "safety_mode": true,
-    "_comment_safety_mode": "safety_mode=true なら SPAT4 ナビゲーション + フォーム入力まで実行 → **最終 投票確定ボタンは押さず 60 秒停止**。初回 LIVE はこのモードで動作確認すること。フル自動にするなら false に変更。",
     "max_bets_per_race_tan": 1,
     "max_bets_per_race_uma": 10,
     "max_total_bets_per_day": 500,
-    "min_odds_to_buy": 1.5,
-    "max_odds_to_buy": 2000.0
+    "min_odds_tan": 2.0,
+    "max_odds_tan": 30.0,
+    "min_odds_uma": 20.0,
+    "max_odds_uma": 9999.0
   },
 
   "operation": {
     "_comment_data_root": "data_root は環境変数 NAR_DATA_ROOT > G:/マイドライブ/... > D:/... > C:/... の順で自動検出。本指定は fallback。",
     "data_root": "D:/workspace/nar/data",
     "poll_interval_sec": 10,
-    "log_dir": "logs/"
+    "log_dir": "logs/",
+    "chrome_profile_dir": "C:/Users/ppny9/AppData/Local/spat4_chrome_profile",
+    "_comment_chrome_profile": "Selenium が使う Chrome プロファイルの保存先。同じディレクトリを使い回すことで「次回から表示しない」などの cookie/localStorage 設定が永続化される。"
   }
 }
