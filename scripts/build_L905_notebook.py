@@ -57,17 +57,14 @@ md("""
 | `betting.min_odds_tan` / `max_odds_tan` | 2.0 / 30.0 | 単勝オッズ範囲 |
 | `betting.min_odds_uma` / `max_odds_uma` | 20.0 / 9999.0 | 馬連オッズ範囲 |
 | `betting.min_odds_san` / `max_odds_san` | 2000.0 / 5000.0 | **3連単オッズ範囲** |
-| `betting.san_enabled` | true | **3連単シグナル算出の ON/OFF** |
-| `betting.san_dry_run_only` | true | **3連単は DRY-RUN のみ** (SPAT4 LIVE 投票画面 DOM 確認後に false へ) |
+| `betting.san_enabled` | true | **3連単シグナル算出・投票の ON/OFF** |
 | `safety.daily_loss_stop_yen` | -50000 | 日次損切ライン (まだ ENFORCE 未実装、ログ表示のみ) |
 | `safety.total_drawdown_stop_yen` | -200000 | 累積 DD ストップ (同上) |
 | `operation.data_root` | (自動検出) | G: → D: → C: の順に **実在チェック** で自動採用 |
 
 ## ⚠ 安全運用
-- **DRY-RUN がデフォルト**。`dry_run: false` に手動切替するまで投票は確定されない
-- **3連単は `san_dry_run_only: true` で多重ガード**。LIVE 投票は SPAT4 投票画面 DOM 確認 + `racing_common.spat4.place_san_bet()` の `_open_ticket_type_page` / `_fill_bet_selection` 拡張が必要
-- LIVE 運用前に手動で SPAT4 にログインして残高・買い目を確認
-- 異常検出時は Ctrl+C で即停止可能
+- LIVE 運用中。Ctrl+C で即停止可能
+- 3連単は `san_enabled: true` の間シグナル算出・投票を実施
 """)
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -113,7 +110,6 @@ SAN_CHANGE_RATE_MAX = config['thresholds'].get('san_change_rate_max', -30.0)
 # 投票設定
 STAKE_YEN              = config['betting']['stake_yen']
 STAKE_YEN_SAN          = config['betting'].get('stake_yen_san', STAKE_YEN)
-DRY_RUN                = bool(config['betting'].get('dry_run', False))
 MAX_BETS_PER_RACE_TAN  = config['betting']['max_bets_per_race_tan']
 MAX_BETS_PER_RACE_UMA  = config['betting']['max_bets_per_race_uma']
 MAX_BETS_PER_RACE_SAN  = config['betting'].get('max_bets_per_race_san', 0)
@@ -125,7 +121,6 @@ MAX_ODDS_UMA           = config['betting'].get('max_odds_uma', 99999.0)
 MIN_ODDS_SAN           = config['betting'].get('min_odds_san', 0.0)
 MAX_ODDS_SAN           = config['betting'].get('max_odds_san', 99999.0)
 SAN_ENABLED            = bool(config['betting'].get('san_enabled', False))
-SAN_DRY_RUN_ONLY       = bool(config['betting'].get('san_dry_run_only', True))
 
 # 運用設定 — data_root はマシン環境を自動判定
 def _resolve_data_root() -> Path:
@@ -179,10 +174,10 @@ else:
 print(f'CONFIG_PATH: {CONFIG_PATH}')
 print(f'T_START → T_END: 単勝/馬連 {T_START}→{T_END}  /  3連単 {SAN_T_START}→{SAN_T_END}')
 print(f'閾値: 単勝 ≤ {TAN_CHANGE_RATE_MAX}% / 馬連 ≤ {UMA_CHANGE_RATE_MAX}% / 3連単 ≤ {SAN_CHANGE_RATE_MAX}%')
-print(f'STAKE: 単勝/馬連 {STAKE_YEN}円  /  3連単 {STAKE_YEN_SAN}円  /  DRY_RUN: {DRY_RUN}')
+print(f'STAKE: 単勝/馬連 {STAKE_YEN}円  /  3連単 {STAKE_YEN_SAN}円')
 print(f'上限: 単勝{MAX_BETS_PER_RACE_TAN}点/race  馬連{MAX_BETS_PER_RACE_UMA}点/race  3連単{MAX_BETS_PER_RACE_SAN}点/race  累計{MAX_TOTAL_BETS_PER_DAY}/day')
 print(f'オッズ範囲: 単勝 {MIN_ODDS_TAN}〜{MAX_ODDS_TAN}  /  馬連 {MIN_ODDS_UMA}〜{MAX_ODDS_UMA}  /  3連単 {MIN_ODDS_SAN}〜{MAX_ODDS_SAN}')
-print(f'3連単: enabled={SAN_ENABLED}  dry_run_only={SAN_DRY_RUN_ONLY}')
+print(f'3連単: enabled={SAN_ENABLED}')
 print(f'監視dir: {SNAPSHOT_DIR}')
 """)
 
@@ -393,13 +388,12 @@ def _format_bet_notification(race_info: dict, tan_bets: list, uma_bets: list,
     if n_san: parts.append(f'3連単{n_san}')
     subj = (f'[NAR L905] 買い目 {race_info.get("venue","?")} '
             f'R{race_info.get("race_num","?")} ' + ' '.join(parts)
-            + (' [DRY-RUN]' if DRY_RUN else ''))
+            )
 
     lines = []
     lines.append(f'race_id : {race_info.get("race_id","")}')
     lines.append(f'venue   : {race_info.get("venue","")}  R{race_info.get("race_num","")}')
     lines.append(f'race_date: {race_info.get("race_date","")}')
-    lines.append(f'mode    : {"DRY-RUN" if DRY_RUN else "LIVE"}')
     lines.append(f'閾値    : 単勝/馬連 {t_start}→{t_end} (-{abs(TAN_CHANGE_RATE_MAX)}%/-{abs(UMA_CHANGE_RATE_MAX)}%)'
                  f'  /  3連単 {SAN_T_START}→{SAN_T_END} (-{abs(SAN_CHANGE_RATE_MAX)}%)')
     lines.append('')
@@ -441,7 +435,6 @@ def execute_bets_for_race(sess: spat4.Spat4Session, driver, race_info: dict, sig
 
     change_rate が小さいもの (= 下落率が大きいもの) から優先して採用し、
     kind ごとに max_bets_per_race_* で打ち切る。
-    3連単は san_dry_run_only=True の間は DRY-RUN ログのみ。
     \"\"\"
     # change_rate 昇順 (最も負 = 下落率最大 が先頭) でソート
     tan_sorted = sorted(signals['tan_bets'], key=lambda b: b['change_rate'])
@@ -477,17 +470,15 @@ def execute_bets_for_race(sess: spat4.Spat4Session, driver, race_info: dict, sig
 
     with open(log_path, 'a', encoding='utf-8-sig') as f:
         if not log_exists:
-            f.write('timestamp,race_id,venue,race_num,kenshu,combo,odds_start,odds_end,change_rate,stake,dry_run,result\\n')
+            f.write('timestamp,race_id,venue,race_num,kenshu,combo,odds_start,odds_end,change_rate,stake,result\\n')
 
         # 単勝・馬連・3連単をバッチ API で一括投票 (racing_common.spat4 v2)
-        # san_dry_run_only=True の間は live_san を空にして LIVE 投票を除外
-        live_san = san_bets if (not DRY_RUN and not SAN_DRY_RUN_ONLY) else []
         bet_ok = True
         san_result = {}
-        if tan_bets or uma_bets or live_san:
+        if tan_bets or uma_bets or san_bets:
             san_result = sess.place_bets_for_race(driver, race_info,
                                                    tan_bets=tan_bets, uma_bets=uma_bets,
-                                                   san_bets=live_san,
+                                                   san_bets=san_bets,
                                                    stake_yen=STAKE_YEN,
                                                    stake_yen_san=STAKE_YEN_SAN)
             bet_ok = san_result.get('ok', False)
@@ -496,31 +487,24 @@ def execute_bets_for_race(sess: spat4.Spat4Session, driver, race_info: dict, sig
             f.write(f'{datetime.now().isoformat(timespec="seconds")},{race_info["race_id"]},'
                     f'{race_info["venue"]},{race_info["race_num"]},tan,{b["umaban"]},'
                     f'{b["odds_start"]},{b["odds_end"]},{b["change_rate"]:.2f},'
-                    f'{STAKE_YEN},{DRY_RUN},{bet_ok}\\n')
+                    f'{STAKE_YEN},{bet_ok}\\n')
             daily_counter.add()
 
         for b in uma_bets:
             f.write(f'{datetime.now().isoformat(timespec="seconds")},{race_info["race_id"]},'
                     f'{race_info["venue"]},{race_info["race_num"]},uma,{b["P1"]}-{b["P2"]},'
                     f'{b["odds_start"]},{b["odds_end"]},{b["change_rate"]:.2f},'
-                    f'{STAKE_YEN},{DRY_RUN},{bet_ok}\\n')
+                    f'{STAKE_YEN},{bet_ok}\\n')
             daily_counter.add()
 
-        # 3連単ログ: san_dry_run_only=True は DRY-RUN ログのみ、False は LIVE 結果を記録
         for b in san_bets:
-            san_force_dry = DRY_RUN or SAN_DRY_RUN_ONLY
             combo = f'{b["P1"]}-{b["P2"]}-{b["P3"]}'
-            if san_force_dry:
-                reason = "DRY_RUN" if DRY_RUN else "san_dry_run_only"
-                print(f'  [DRY-RUN BET] 3連単 {combo} stake={STAKE_YEN_SAN}円 ({reason})')
-                ok = True
-            else:
-                san_errs = san_result.get('san_errors', [])
-                ok = not any(combo in e for e in san_errs)
+            san_errs = san_result.get('san_errors', [])
+            ok = not any(combo in e for e in san_errs)
             f.write(f'{datetime.now().isoformat(timespec="seconds")},{race_info["race_id"]},'
                     f'{race_info["venue"]},{race_info["race_num"]},san,{combo},'
                     f'{b["odds_start"]},{b["odds_end"]},{b["change_rate"]:.2f},'
-                    f'{STAKE_YEN_SAN},{DRY_RUN or SAN_DRY_RUN_ONLY},{ok}\\n')
+                    f'{STAKE_YEN_SAN},{ok}\\n')
             daily_counter.add()
 """)
 
@@ -574,7 +558,7 @@ code("""
 # ════════════════════════════════════════════════════════════
 def main_loop():
     print(f'=== L905 自動投票監視 開始  {datetime.now():%Y-%m-%d %H:%M:%S} ===')
-    print(f'    DRY_RUN={DRY_RUN}  STAKE={STAKE_YEN}円  上限={MAX_TOTAL_BETS_PER_DAY}/day')
+    print(f'    STAKE={STAKE_YEN}円  上限={MAX_TOTAL_BETS_PER_DAY}/day')
 
     processed_race_ids = set()
     # 起動時、当日分の処理済みレースを log から復元
@@ -590,17 +574,13 @@ def main_loop():
 
     sess = spat4.Spat4Session(config, headless=False)
 
-    # DRY-RUN 時は driver を起動しない (Selenium 不要)
-    driver = None
-    if not DRY_RUN:
-        from contextlib import ExitStack
-        stack = ExitStack()
-        driver = stack.enter_context(sess.driver())
-        if not sess.login(driver):
-            print('  [FATAL] SPAT4 login 失敗、終了')
-            return
-    else:
-        print('  [INFO] DRY_RUN モード — Selenium driver 起動せず、シグナルログのみ')
+    from contextlib import ExitStack
+    stack = ExitStack()
+    driver = stack.enter_context(sess.driver())
+    if not sess.login(driver):
+        print('  [FATAL] SPAT4 login 失敗、終了')
+        stack.close()
+        return
 
     try:
         while True:
@@ -614,12 +594,14 @@ def main_loop():
                     continue
                 race_info = resolve_race_info(rid)
                 signals = compute_signals_for_race(rid)
-                n_tan, n_uma = len(signals['tan_bets']), len(signals['uma_bets'])
-                if n_tan + n_uma == 0:
+                n_tan = len(signals['tan_bets'])
+                n_uma = len(signals['uma_bets'])
+                n_san = len(signals.get('san_bets', []))
+                if n_tan + n_uma + n_san == 0:
                     print(f'[{datetime.now():%H:%M:%S}] {rid} {race_info["venue"]} R{race_info["race_num"]}: シグナルなし')
                 else:
                     print(f'[{datetime.now():%H:%M:%S}] {rid} {race_info["venue"]} R{race_info["race_num"]}: '
-                          f'シグナル 単勝{n_tan} 馬連{n_uma}')
+                          f'シグナル 単勝{n_tan} 馬連{n_uma} 3連単{n_san}')
                     execute_bets_for_race(sess, driver, race_info, signals)
                 processed_race_ids.add(rid)
 
@@ -630,22 +612,16 @@ def main_loop():
         print(f'[FATAL] {e}')
         traceback.print_exc()
     finally:
-        if driver is not None:
-            try:
-                driver.quit()
-            except Exception:
-                pass
+        stack.close()
         print(f'=== L905 終了  累計投票 {daily_counter.count} ===')
 
 
-# 実行するときは以下のコメントを外す:
-# main_loop()
-print('main_loop() を呼ぶと監視開始。最初は DRY_RUN=true で動作確認すること。')
+main_loop()
 """)
 
 # ─────────────────────────────────────────────────────────────────────────────
 md("""
-## 動作確認手順
+## 前提・停止方法
 
 ### 前提
 - 取得側 (`scripts/L902_realtime_scraper_v01.py` または `#L901` ノートブック) が常時起動して
@@ -653,41 +629,9 @@ md("""
 - メール通知用の環境変数 (`NOTIFY_SMTP_USER`, `NOTIFY_SMTP_PASS`, `NOTIFY_EMAIL_TO` 等) が設定済みであること
   - JRA #J90x 系と同じ環境変数。未設定でもエラーにはならず、通知だけスキップされる
 
-### ステップ
-
-1. **シグナル検出のみテスト (Selenium 不要)**
-   - 上のセル `test_signal_for_race(rid)` で過去レースのシグナル抽出を確認
-   - 期待する閾値で買い目が出るか目視確認
-
-2. **メール通知の単独テスト**
-   ```python
-   from racing_common.notify import send_email_if_configured
-   ok = send_email_if_configured('[NAR L905 テスト] 件名',
-                                   '本文テスト\\n複数行も可')
-   print(f'sent={ok}')   # True なら環境変数 OK
-   ```
-
-3. **DRY-RUN フルラン**
-   - `config.betting.dry_run = true` のまま `main_loop()` を実行
-   - 買い目が出たら以下が同時に発生することを確認:
-     - 標準出力に `[DRY-RUN BET]` が表示される
-     - `logs/L905_bet_log_YYYYMMDD.csv` に行が追記される
-     - メールが届く (件名: `[NAR L905] 買い目 ... [DRY-RUN]`)
-   - Selenium driver は起動しないので副作用なし
-
-4. **SPAT4 ログインだけ単独テスト** (Selenium 起動)
-   ```python
-   sess = spat4.Spat4Session(config, headless=False)
-   with sess.driver() as drv:
-       sess.login(drv)
-       time.sleep(60)  # 60 秒間ブラウザ表示
-   ```
-   → ブラウザでログイン後の画面が見えれば OK
-
-5. **LIVE 運用前の最終チェック**
-   - `dry_run: false` に切替えるのは **最後**
-   - 初回 LIVE は `stake_yen: 100`、`max_total_bets_per_day: 3` 程度に絞る
-   - 投票結果を SPAT4 サイトで都度目視確認
+### 停止
+- Jupyter でセルを中断 (■ ボタン) または Ctrl+C → `=== L905 終了 ===` が表示されて安全停止
+- 翌日の再起動は最終セルを再実行するだけ (ログ自動復元で重複投票なし)
 """)
 
 

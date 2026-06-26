@@ -26,9 +26,7 @@
     "max_odds_uma": 9999.0,
     "min_odds_san": 2000.0,
     "max_odds_san": 5000.0,
-    "san_enabled": true,
-    "san_dry_run_only": true,
-    "_comment_san_dry_run": "san_dry_run_only=true の間は 3連単は DRY-RUN のみ。SPAT4 投票画面の DOM 確認後に false に切替"
+    "san_enabled": true
   },
 
   "safety": {
