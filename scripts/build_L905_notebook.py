@@ -482,6 +482,10 @@ def execute_bets_for_race(sess: spat4.Spat4Session, driver, race_info: dict, sig
                                                    stake_yen=STAKE_YEN,
                                                    stake_yen_san=STAKE_YEN_SAN)
             bet_ok = san_result.get('ok', False)
+            if not bet_ok:
+                detail = san_result.get('detail', '')
+                if '締切' not in detail:
+                    raise RuntimeError(f'投票失敗: {detail}')
 
         for b in tan_bets:
             f.write(f'{datetime.now().isoformat(timespec="seconds")},{race_info["race_id"]},'
@@ -582,6 +586,9 @@ def main_loop():
         stack.close()
         return
 
+    MAX_CONSECUTIVE_ERRORS = 3
+    consecutive_errors = 0
+
     try:
         while True:
             # 当日生成された T-3 ファイルをスキャン
@@ -602,7 +609,24 @@ def main_loop():
                 else:
                     print(f'[{datetime.now():%H:%M:%S}] {rid} {race_info["venue"]} R{race_info["race_num"]}: '
                           f'シグナル 単勝{n_tan} 馬連{n_uma} 3連単{n_san}')
-                    execute_bets_for_race(sess, driver, race_info, signals)
+                    try:
+                        execute_bets_for_race(sess, driver, race_info, signals)
+                        consecutive_errors = 0  # 成功でリセット
+                    except Exception as e:
+                        consecutive_errors += 1
+                        print(f'  [ERROR] 投票エラー ({consecutive_errors}/{MAX_CONSECUTIVE_ERRORS}): {e}')
+                        traceback.print_exc()
+                        if consecutive_errors >= MAX_CONSECUTIVE_ERRORS:
+                            print(f'  [FATAL] 連続{MAX_CONSECUTIVE_ERRORS}回エラー — 停止します')
+                            raise
+                        # ドライバー再ログインして次のレースに備える
+                        print('  [INFO] ドライバー再ログイン試行...')
+                        try:
+                            driver.switch_to.default_content()
+                            sess.login(driver)
+                            print('  [INFO] 再ログイン成功')
+                        except Exception as re_e:
+                            print(f'  [WARN] 再ログイン失敗: {re_e}')
                 processed_race_ids.add(rid)
 
             time.sleep(POLL_INTERVAL_SEC)
