@@ -1,0 +1,31 @@
+{
+  "_comment": "L905 自動投票の設定 (閾値・上限・運用)。本ファイルは git 管理されサブPCへ pull で同期される。認証情報は spat4_credentials.json (gitignored) に分離。",
+
+  "thresholds": {
+    "_comment": "T_START → T_END の change_rate (%) がこの値以下なら買う (= 下落シグナル)",
+    "T_START": "T10",
+    "T_END": "T3",
+    "tan_change_rate_max": -30.0,
+    "uma_change_rate_max": -30.0
+  },
+
+  "betting": {
+    "stake_yen": 100,
+    "max_bets_per_race_tan": 1,
+    "max_bets_per_race_uma": 10,
+    "max_total_bets_per_day": 500,
+    "min_odds_tan": 2.0,
+    "max_odds_tan": 30.0,
+    "min_odds_uma": 20.0,
+    "max_odds_uma": 9999.0
+  },
+
+  "operation": {
+    "_comment_data_root": "data_root は環境変数 NAR_DATA_ROOT > G:/マイドライブ/... > D:/... > C:/... の順で自動検出。本指定は fallback。",
+    "data_root": "D:/workspace/nar/data",
+    "poll_interval_sec": 10,
+    "log_dir": "logs/",
+    "chrome_profile_dir": "C:/Users/ppny9/AppData/Local/spat4_chrome_profile",
+    "_comment_chrome_profile": "Selenium が使う Chrome プロファイルの保存先。同じディレクトリを使い回すことで「次回から表示しない」などの cookie/localStorage 設定が永続化される。"
+  }
+}
