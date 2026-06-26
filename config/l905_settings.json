@@ -2,22 +2,40 @@
   "_comment": "L905 自動投票の設定 (閾値・上限・運用)。本ファイルは git 管理されサブPCへ pull で同期される。認証情報は spat4_credentials.json (gitignored) に分離。",
 
   "thresholds": {
-    "_comment": "T_START → T_END の change_rate (%) がこの値以下なら買う (= 下落シグナル)",
+    "_comment": "券種別の T_START → T_END と change_rate (%) 閾値。3連単は T-30 → T-3 が L929 検証で最良。",
     "T_START": "T10",
     "T_END": "T3",
     "tan_change_rate_max": -30.0,
-    "uma_change_rate_max": -30.0
+    "uma_change_rate_max": -30.0,
+    "san_T_START": "T30",
+    "san_T_END": "T3",
+    "san_change_rate_max": -30.0
   },
 
   "betting": {
+    "_comment_san": "3連単 A 型 試験運用 (2026-06-26 開始, stake_yen_san=50 半額)。L929 集計で PL +1.3M / PL_ex_max +57万 を確認。安定したら 100 円に戻す。",
     "stake_yen": 100,
+    "stake_yen_san": 50,
     "max_bets_per_race_tan": 1,
     "max_bets_per_race_uma": 10,
-    "max_total_bets_per_day": 500,
+    "max_bets_per_race_san": 20,
+    "max_total_bets_per_day": 1000,
     "min_odds_tan": 2.0,
     "max_odds_tan": 30.0,
     "min_odds_uma": 20.0,
-    "max_odds_uma": 9999.0
+    "max_odds_uma": 9999.0,
+    "min_odds_san": 2000.0,
+    "max_odds_san": 5000.0,
+    "san_enabled": true,
+    "san_dry_run_only": true,
+    "_comment_san_dry_run": "san_dry_run_only=true の間は 3連単は DRY-RUN のみ。SPAT4 投票画面の DOM 確認後に false に切替"
+  },
+
+  "safety": {
+    "_comment": "試験運用の自動停止条件",
+    "daily_loss_stop_yen": -50000,
+    "consecutive_loss_days_stop": 3,
+    "total_drawdown_stop_yen": -200000
   },
 
   "operation": {

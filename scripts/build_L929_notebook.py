@@ -1,15 +1,15 @@
-"""#L919_odds_analysis_rakuten_v01.ipynb を生成するスクリプト。
+"""#L929_odds_analysis_merged_v01.ipynb を生成するスクリプト。
 
-#L909 (netkeiba 12 桁データ用) の楽天版。
-- race_id 18 桁 (`YYYY MMDD VVVV KK NN RR`) に対応 (L902 が 06-23 以降この形式で保存)
-- 単勝・馬連 (umaren) に加えて **3連単 (sanrentan)** の集計を新規追加
-- T-2 (#L901 に追加された) を T_LABELS に含める
+#L909 (12桁 netkeiba) と #L919 (18桁 楽天) のデータを **両方マージ** して集計する版。
+- race_id 12 桁 (`YYYY VV MMDD RR`) と 18 桁 (`YYYY MMDD VVVV KK NN RR`) の両対応
+- 単勝・馬連は両桁マージ、3連単は 18 桁データのみ
+- サンプル拡張により T10→T3 の閾値検証を安定化
 """
 from pathlib import Path
 
 import nbformat as nbf
 
-NB_PATH = Path(__file__).resolve().parents[1] / 'notebooks' / '#L919_odds_analysis_rakuten_v01.ipynb'
+NB_PATH = Path(__file__).resolve().parents[1] / 'notebooks' / '#L929_odds_analysis_merged_v01.ipynb'
 
 CELLS: list[tuple[str, str]] = []
 
@@ -24,26 +24,28 @@ def code(src: str):
 
 # ─────────────────────────────────────────────────────────────────────────────
 md("""
-# #L919 NAR 楽天競馬 オッズスナップショット分析 v01
+# #L929 NAR オッズスナップショット分析 (マージ版) v01
 
-`#L909` の **楽天競馬版** (18桁 race_id、3連単対応)。
+`#L909` (12 桁 netkeiba) と `#L919` (18 桁 楽天) のデータを **両方マージ** して集計するノートブック。
 
-## 違い (#L909 との比較)
-| 項目 | #L909 | #L919 (本ノートブック) |
-|---|---|---|
-| 取得元 | netkeiba | 楽天競馬 |
-| race_id | 12 桁 (`YYYY VV MMDD RR`) | **18 桁** (`YYYY MMDD VVVV KK NN RR`) |
-| 取得オッズ | 単勝・複勝・馬連 | + **3連単 (sanrentan)** |
-| T_LABELS | T-60〜T-1 (7点) | + **T-2** (8点) |
-| venue | race_id 5-6 桁目から直接 | **shutsuba CSV の venue 列から lookup** |
+## 対応 race_id
+| 桁数 | 形式 | データ提供期間 | sanrentan |
+|---|---|---|---|
+| 12 桁 | `YYYY VV MMDD RR` | 〜 2026-06-22 (旧 netkeiba 系) | なし |
+| 18 桁 | `YYYY MMDD VVVV KK NN RR` | 2026-06-23 〜 (新 楽天 L902) | あり |
 
-## 分析項目 (#L909 と同等 + 3連単拡張)
-1. 取得状況 (日付ごとレース数、欠損)
+## 目的
+- 単勝・馬連の **サンプルサイズを最大化** して閾値検証を安定化
+- 旧データ (12桁) と新データ (18桁) の傾向差分の可視化
+- 3連単は 18桁時代のデータのみで集計
+
+## 分析項目 (#L919 と同等)
+1. 取得状況 (日付・桁数別レース数)
 2. T-X → T-3 / T-1 オッズ変化率の 10 区分集計
-3. 区分別の的中・回収統計 — **単勝・馬連・3連単** すべて
+3. 区分別の的中・回収統計 — **単勝・馬連・3連単**
 4. 閾値スイープによる最適下落率カットオフ
-5. T-3 終端 vs T-1 終端 の比較
-6. **3連単独自の特性分析** (高配当・低的中率)
+5. T-3 終端 vs T-2 / T-1 終端 の比較
+6. **最適閾値サマリー表** (Tx→Tx 全パターン × 桁数別 ROI/PL 一覧)
 """)
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -89,26 +91,38 @@ print(f'SHUTSUBA_DIR: {SHUTSUBA_DIR}  (exists={SHUTSUBA_DIR.exists()})')
 md("""
 ## 1. 取得状況の把握
 
-ファイル名形式: `{race_id_18digit}_T{XX}_{kind}_{YYYYMMDD-HHMM}.csv`
-- race_id 18 桁: `YYYY MMDD VVVV KK NN RR` (YYYY=年, MMDD=月日, VVVV=場所コード, KK=開催回, NN=開催日数, RR=R番号)
-- venue 名は shutsuba CSV から lookup (race_id → venue マッピング作成)
+ファイル名形式: `{race_id_12 or 18 digit}_T{XX}_{kind}_{YYYYMMDD-HHMM}.csv`
+- 12 桁: `YYYY VV MMDD RR` (旧 netkeiba)
+- 18 桁: `YYYY MMDD VVVV KK NN RR` (新 楽天)
+- 桁数で race_date / venue_code / race_num の切り出し位置を分岐
 """)
 
 # ─────────────────────────────────────────────────────────────────────────────
 code("""
 def parse_snapshot_filename(p: Path) -> dict | None:
-    m = re.match(r'(\\d{18})_(T\\d+)_(tanfuku|umaren|sanrentan)_(\\d{8})-(\\d{4})\\.csv', p.name)
+    m = re.match(r'(\\d{12}|\\d{18})_(T\\d+)_(tanfuku|umaren|sanrentan)_(\\d{8})-(\\d{4})\\.csv', p.name)
     if not m:
         return None
     race_id, label, kind, snap_date, snap_hhmm = m.groups()
-    # 18 桁 race_id: YYYY(4) + MMDD(4) + VVVV(4) + KK(2) + NN(2) + RR(2)
+    digits = len(race_id)
+    if digits == 12:
+        # 12 桁: YYYY(4) + VV(2) + MMDD(4) + RR(2)
+        race_date = f'{race_id[:4]}-{race_id[6:8]}-{race_id[8:10]}'
+        venue_code = race_id[4:6]
+        race_num = int(race_id[10:12])
+    else:
+        # 18 桁: YYYY(4) + MMDD(4) + VVVV(4) + KK(2) + NN(2) + RR(2)
+        race_date = f'{race_id[:4]}-{race_id[4:6]}-{race_id[6:8]}'
+        venue_code = race_id[8:12]
+        race_num = int(race_id[16:18])
     return {
         'race_id': race_id,
         'label': label,
         'kind': kind,
-        'race_date': f'{race_id[:4]}-{race_id[4:6]}-{race_id[6:8]}',
-        'venue_code': race_id[8:12],
-        'race_num': int(race_id[16:18]),
+        'race_date': race_date,
+        'venue_code': venue_code,
+        'race_num': race_num,
+        'digits': digits,
         'snapshot_at': pd.to_datetime(f'{snap_date}T{snap_hhmm[:2]}:{snap_hhmm[2:]}'),
         'path': p,
     }
@@ -116,13 +130,17 @@ def parse_snapshot_filename(p: Path) -> dict | None:
 
 snap_records = [r for r in (parse_snapshot_filename(p) for p in SNAPSHOT_DIR.glob('*.csv')) if r]
 df_inv = pd.DataFrame(snap_records)
-print(f'18桁 race_id スナップショット: {len(df_inv):,} 件')
+print(f'統合スナップショット: {len(df_inv):,} 件')
 if df_inv.empty:
-    print('⚠ 18桁データなし — L902 が稼働してデータが溜まるまで本ノートブックの集計部分はスキップしてください')
+    print('⚠ データなし')
 else:
     print(f'対象 race_id 数: {df_inv["race_id"].nunique():,}')
     print(f'対象日           : {sorted(df_inv["race_date"].unique())}')
+    print(f'桁数別件数       : {df_inv["digits"].value_counts().to_dict()}')
     print(f'kind 内訳        : {df_inv["kind"].value_counts().to_dict()}')
+    # 桁数 × kind クロス
+    print('\\n=== 桁数 × kind クロス ===')
+    print(df_inv.groupby(['digits', 'kind']).size().unstack(fill_value=0))
 df_inv.head()
 """)
 
@@ -132,8 +150,8 @@ code("""
 venue_map = {}
 for p in SHUTSUBA_DIR.glob('*_shutsuba.csv'):
     try:
-        # race_id 18 桁のみ対象
-        m = re.match(r'(\\d{18})_shutsuba\\.csv', p.name)
+        # 12 桁 or 18 桁
+        m = re.match(r'(\\d{12}|\\d{18})_shutsuba\\.csv', p.name)
         if not m:
             continue
         rid = m.group(1)
@@ -208,7 +226,12 @@ def load_snapshots(kind: str, labels: list[str]) -> pd.DataFrame:
             dfs.append(pd.read_csv(p, encoding='utf-8-sig'))
         except Exception as e:
             print(f'  [WARN] {p.name}: {e}')
-    return pd.concat(dfs, ignore_index=True) if dfs else pd.DataFrame()
+    if not dfs:
+        return pd.DataFrame()
+    out = pd.concat(dfs, ignore_index=True)
+    # 12 桁 (int) と 18 桁 (str) の merge 衝突回避のため文字列で統一
+    out['race_id'] = out['race_id'].astype(str)
+    return out
 
 
 def build_wide(kind: str, labels: list[str]) -> pd.DataFrame:
@@ -244,10 +267,12 @@ md("""
 code("""
 # ── 結果
 res_files = sorted(RESULT_DIR.glob('*_result.csv'))
-# 18 桁 race_id のみ対象
-res_files = [p for p in res_files if re.match(r'\\d{18}_result\\.csv', p.name)]
+# 12 桁 or 18 桁
+res_files = [p for p in res_files if re.match(r'(\\d{12}|\\d{18})_result\\.csv', p.name)]
 res_dfs = [pd.read_csv(p, encoding='utf-8-sig') for p in res_files]
 df_res = pd.concat(res_dfs, ignore_index=True) if res_dfs else pd.DataFrame()
+if not df_res.empty:
+    df_res['race_id'] = df_res['race_id'].astype(str)
 print(f'result 行数: {len(df_res):,}  / 対象 race_id: {df_res["race_id"].nunique() if not df_res.empty else 0}')
 
 if not df_res.empty:
@@ -271,9 +296,11 @@ else:
 code("""
 # ── 払戻
 pay_files = sorted(RESULT_DIR.glob('*_payout.csv'))
-pay_files = [p for p in pay_files if re.match(r'\\d{18}_payout\\.csv', p.name)]
+pay_files = [p for p in pay_files if re.match(r'(\\d{12}|\\d{18})_payout\\.csv', p.name)]
 pay_dfs = [pd.read_csv(p, encoding='utf-8-sig') for p in pay_files]
 df_pay = pd.concat(pay_dfs, ignore_index=True) if pay_dfs else pd.DataFrame()
+if not df_pay.empty:
+    df_pay['race_id'] = df_pay['race_id'].astype(str)
 print(f'payout 行数: {len(df_pay):,}')
 
 # 単勝
@@ -710,14 +737,301 @@ else:
 
 # ─────────────────────────────────────────────────────────────────────────────
 md("""
+## 11. 最適閾値サマリー一覧 (Tx→Tx 全パターン)
+
+統合データ (12+18桁) で **単勝・馬連** の全 Tx→Tx パターン × 最適閾値 を一覧化。
+- ROI 順 / PL 順 でソート
+- `min_n=30` 以上のサンプル数を持つパターンのみ表示
+- T10→T3 ベースラインを別途表示
+""")
+
+# ─────────────────────────────────────────────────────────────────────────────
+code("""
+T_MIN = {'T60':60,'T30':30,'T15':15,'T10':10,'T5':5,'T3':3,'T2':2,'T1':1}
+START_PAIRS = ['T60', 'T30', 'T15', 'T10', 'T5', 'T3', 'T2']
+END_PAIRS   = ['T30', 'T15', 'T10', 'T5', 'T3', 'T2', 'T1']
+MIN_N_SUMMARY = 30
+
+
+def _best_one(df: pd.DataFrame, thresholds: np.ndarray, min_n: int):
+    if df.empty:
+        return None
+    rows = []
+    for th in thresholds:
+        sub = df[df['change_rate'] <= th]
+        n = len(sub)
+        if n == 0:
+            continue
+        rev = sub['payout'].sum()
+        nr = sub['race_id'].nunique()
+        rows.append({
+            'th': th, 'n': n,
+            'hit%': sub['hit'].sum() / n * 100,
+            'roi%': rev / (n * 100) * 100,
+            'pl': int(rev - n * 100),
+            'pick/R': n / max(1, nr),
+        })
+    sw = pd.DataFrame(rows)
+    ok = sw[sw['n'] >= min_n]
+    if ok.empty:
+        return None
+    return {
+        'roi': ok.loc[ok['roi%'].idxmax()].to_dict(),
+        'pl':  ok.loc[ok['pl'].idxmax()].to_dict(),
+    }
+
+
+def summary_table(kind: str) -> pd.DataFrame:
+    rows = []
+    for s in START_PAIRS:
+        for e in END_PAIRS:
+            if T_MIN[s] <= T_MIN[e]:
+                continue
+            df = build_pattern(s, kind, e)
+            if df.empty:
+                continue
+            r = _best_one(df, THRESHOLDS, MIN_N_SUMMARY)
+            if r is None:
+                continue
+            br, bp = r['roi'], r['pl']
+            rows.append({
+                'pattern': f'{s}→{e}',
+                '母数': len(df),
+                'レース数': df['race_id'].nunique(),
+                'ROI最大_閾値%': round(br['th'], 1),
+                'ROI最大_母数': int(br['n']),
+                'ROI最大_的中率%': round(br['hit%'], 2),
+                'ROI最大_回収率%': round(br['roi%'], 1),
+                'ROI最大_P/L¥': int(br['pl']),
+                'ROI最大_買い目/R': round(br['pick/R'], 2),
+                'PL最大_閾値%': round(bp['th'], 1),
+                'PL最大_母数': int(bp['n']),
+                'PL最大_的中率%': round(bp['hit%'], 2),
+                'PL最大_回収率%': round(bp['roi%'], 1),
+                'PL最大_P/L¥': int(bp['pl']),
+                'PL最大_買い目/R': round(bp['pick/R'], 2),
+            })
+    return pd.DataFrame(rows)
+
+
+def style_summary(df: pd.DataFrame):
+    def cr(v):
+        if pd.isna(v): return ''
+        if v >= 150: return 'background-color:#1b5e20;color:#fff'
+        if v >= 120: return 'background-color:#2e7d32;color:#fff'
+        if v >= 100: return 'background-color:#66bb6a;color:#000'
+        if v >=  80: return 'background-color:#fff176;color:#000'
+        return 'background-color:#e57373;color:#000'
+
+    def hit(v):
+        if pd.isna(v): return ''
+        if v >= 20: return 'background-color:#66bb6a;color:#000'
+        if v >= 15: return 'background-color:#a5d6a7;color:#000'
+        if v >= 10: return 'background-color:#fff176;color:#000'
+        return 'background-color:#ef9a9a;color:#000'
+
+    return (df.style
+              .map(cr,  subset=['ROI最大_回収率%', 'PL最大_回収率%'])
+              .map(hit, subset=['ROI最大_的中率%', 'PL最大_的中率%'])
+              .format({'ROI最大_P/L¥': '{:,d}', 'PL最大_P/L¥': '{:,d}', '母数': '{:,d}'}))
+
+
+for kind in ['tanfuku', 'umaren']:
+    print(f'\\n=========== {kind}: 全 Tx→Tx 最適閾値 (min_n={MIN_N_SUMMARY}) ===========')
+    bt = summary_table(kind)
+    if bt.empty:
+        print('  データなし')
+        continue
+    # ROI 順
+    print(f'--- {kind}: ROI 最大 順 (上位 10) ---')
+    display(style_summary(bt.sort_values('ROI最大_回収率%', ascending=False).head(10).reset_index(drop=True)))
+    # PL 順
+    print(f'--- {kind}: P/L 最大 順 (上位 10) ---')
+    display(style_summary(bt.sort_values('PL最大_P/L¥', ascending=False).head(10).reset_index(drop=True)))
+    # T10→T3 行
+    base = bt[bt['pattern'] == 'T10→T3']
+    if not base.empty:
+        print(f'--- {kind}: 参考 T10→T3 ベースライン ---')
+        display(style_summary(base.reset_index(drop=True)))
+""")
+
+# ─────────────────────────────────────────────────────────────────────────────
+code("""
+# T10→T3 の閾値スイープを 2% 刻みで細かく見る (単勝・馬連)
+def sweep_fine(kind: str, start='T10', end='T3', thresholds=np.arange(-40, 1, 2.0)):
+    df = build_pattern(start, kind, end)
+    if df.empty:
+        return pd.DataFrame()
+    rows = []
+    for th in thresholds:
+        sub = df[df['change_rate'] <= th]
+        n = len(sub)
+        if n == 0:
+            continue
+        rev = sub['payout'].sum()
+        nr = sub['race_id'].nunique()
+        rows.append({
+            '閾値(%)': th, '母数': n, 'レース数': nr,
+            '的中数': int(sub['hit'].sum()),
+            '的中率(%)': round(sub['hit'].sum() / n * 100, 2),
+            '回収率(%)': round(rev / (n * 100) * 100, 1),
+            'P/L(¥)': int(rev - n * 100),
+            '買い目/R': round(n / max(1, nr), 2),
+        })
+    return pd.DataFrame(rows)
+
+
+def style_fine(df):
+    def cr(v):
+        if pd.isna(v): return ''
+        if v >= 120: return 'background-color:#2e7d32;color:#fff'
+        if v >= 100: return 'background-color:#66bb6a;color:#000'
+        if v >=  80: return 'background-color:#fff176;color:#000'
+        return 'background-color:#e57373;color:#000'
+    return df.style.map(cr, subset=['回収率(%)']).format({'P/L(¥)': '{:,d}', '母数': '{:,d}'})
+
+
+for kind in ['tanfuku', 'umaren']:
+    fine = sweep_fine(kind)
+    if fine.empty:
+        continue
+    print(f'\\n=========== {kind}: T10→T3 閾値スイープ (2% 刻み) ===========')
+    display(style_fine(fine))
+""")
+
+# ─────────────────────────────────────────────────────────────────────────────
+md("""
+## 12. 3連単 オッズレンジスイープ (買い目数制約付き)
+
+3連単は組合せ爆発で買い目数が増えやすい。実運用に乗せるため:
+- 主力パターン **T30→T3** (前回検証で最強) と **T10→T3** で比較
+- 下落率閾値 **-25% / -30% / -35%** で固定
+- T3 オッズの下限 × 上限グリッドで ROI / PL / 買い目数を一覧
+- **PL_ex_max** (最大配当 1 本を除いた P/L) を併記して 1ヒット依存度を可視化
+- 買い目数 / レース が **指定上限以下 (デフォルト 30 点/R)** の組合せのみ抽出
+""")
+
+# ─────────────────────────────────────────────────────────────────────────────
+code("""
+SANRENTAN_LO = [0, 50, 100, 200, 300, 500, 800, 1000, 2000, 3000]
+SANRENTAN_HI = [200, 500, 1000, 2000, 3000, 5000, 10000, 30000, 999999]
+SANRENTAN_CHANGE_RATES = [-25, -30, -35]
+MAX_PICKS_PER_RACE = 30  # 1 レースあたりの買い目上限
+MIN_N_SAN = 100          # 母数の最低ライン
+
+
+def sanrentan_range_sweep(start: str, end: str = 'T3') -> pd.DataFrame:
+    '''指定 (start, end) で change_rate × T3オッズレンジ のグリッド集計を返す。'''
+    df = build_pattern(start, 'sanrentan', end)
+    if df.empty:
+        return pd.DataFrame()
+    df = df.rename(columns={end: 't3_odds'})
+    rows = []
+    for th in SANRENTAN_CHANGE_RATES:
+        base = df[df['change_rate'] <= th]
+        if base.empty:
+            continue
+        for lo in SANRENTAN_LO:
+            for hi in SANRENTAN_HI:
+                if hi <= lo:
+                    continue
+                sub = base[(base['t3_odds'] >= lo) & (base['t3_odds'] <= hi)]
+                n = len(sub)
+                if n < MIN_N_SAN:
+                    continue
+                nr = sub['race_id'].nunique()
+                pick_r = n / max(1, nr)
+                if pick_r > MAX_PICKS_PER_RACE:
+                    continue
+                rev = sub['payout'].sum()
+                hits = sub[sub['hit'] == 1]
+                max_pay = int(hits['payout'].max()) if not hits.empty else 0
+                pl = int(rev - n * 100)
+                rows.append({
+                    '閾値%': th,
+                    '下限': lo,
+                    '上限': hi if hi < 999999 else '∞',
+                    '母数': n,
+                    'R数': nr,
+                    '的中': int(sub['hit'].sum()),
+                    '的中率%': round(sub['hit'].sum() / n * 100, 3),
+                    'ROI%': round(rev / (n * 100) * 100, 1),
+                    'P/L¥': pl,
+                    'PL_ex_max': pl - max_pay,
+                    'max配当': max_pay,
+                    '買い目/R': round(pick_r, 1),
+                })
+    return pd.DataFrame(rows)
+
+
+def style_san(df: pd.DataFrame):
+    def cr(v):
+        if pd.isna(v): return ''
+        if v >= 200: return 'background-color:#1b5e20;color:#fff'
+        if v >= 150: return 'background-color:#2e7d32;color:#fff'
+        if v >= 120: return 'background-color:#66bb6a;color:#000'
+        if v >= 100: return 'background-color:#a5d6a7;color:#000'
+        return 'background-color:#ef9a9a;color:#000'
+
+    def plex(v):
+        # PL_ex_max が正なら緑、負なら赤
+        if pd.isna(v): return ''
+        if v >= 100000: return 'background-color:#1b5e20;color:#fff'
+        if v >= 0: return 'background-color:#66bb6a;color:#000'
+        if v >= -50000: return 'background-color:#fff176;color:#000'
+        return 'background-color:#ef9a9a;color:#000'
+
+    return (df.style
+              .map(cr, subset=['ROI%'])
+              .map(plex, subset=['PL_ex_max'])
+              .format({'P/L¥': '{:,d}', 'PL_ex_max': '{:,d}', 'max配当': '{:,d}', '母数': '{:,d}', 'R数': '{:,d}'}))
+
+
+for start in ['T30', 'T10']:
+    grid = sanrentan_range_sweep(start, 'T3')
+    print(f'\\n=========== 3連単 {start}→T3 オッズレンジスイープ '
+          f'(min_n={MIN_N_SAN}, max_picks/R={MAX_PICKS_PER_RACE}) ===========')
+    if grid.empty:
+        print('  該当データなし')
+        continue
+    print(f'--- ROI 上位 12 ---')
+    display(style_san(grid.sort_values('ROI%', ascending=False).head(12).reset_index(drop=True)))
+    print(f'--- P/L 上位 12 ---')
+    display(style_san(grid.sort_values('P/L¥', ascending=False).head(12).reset_index(drop=True)))
+    print(f'--- PL_ex_max 上位 12 (1ヒット依存度低い順) ---')
+    display(style_san(grid.sort_values('PL_ex_max', ascending=False).head(12).reset_index(drop=True)))
+""")
+
+# ─────────────────────────────────────────────────────────────────────────────
+code("""
+# 買い目数の上限を 10/20/30 と変えたときに残るレンジを抽出
+print('\\n=========== 3連単 推奨レンジ抽出 (T30→T3, 買い目数別) ===========')
+
+def filter_picks(grid: pd.DataFrame, max_picks: float) -> pd.DataFrame:
+    return grid[grid['買い目/R'] <= max_picks].sort_values('P/L¥', ascending=False)
+
+grid_t30 = sanrentan_range_sweep('T30', 'T3')
+if not grid_t30.empty:
+    for max_p in [10, 20, 30]:
+        sub = filter_picks(grid_t30, max_p)
+        print(f'\\n--- 買い目 <= {max_p} 点/R: {len(sub)} 組合せ ---')
+        if sub.empty:
+            print('  なし'); continue
+        display(style_san(sub.head(8).reset_index(drop=True)))
+""")
+
+# ─────────────────────────────────────────────────────────────────────────────
+md("""
 ## まとめ
 
-L909 (netkeiba) と L919 (楽天) のすみ分け:
-- **L909**: 過去 netkeiba 12 桁データ (`YYYY VV MMDD RR`) の継続観察用
-- **L919**: L902 楽天 18 桁データ (`YYYY MMDD VVVV KK NN RR`) — 3連単含む現行運用基盤
+L909 / L919 / L929 のすみ分け:
+- **L909**: 過去 netkeiba 12 桁データの継続観察用 (旧データ単独)
+- **L919**: L902 楽天 18 桁データの単独集計 — 3連単含む現行データ単独
+- **L929 (本ノートブック)**: 12 桁 + 18 桁 **マージ集計** — 最大サンプルでの閾値検証
 
-> L902 (楽天) が 2026-06-23 から 18 桁・3連単含みで保存し始めたため、本ノートブックが現行データの主分析。
-> 12 桁データ (06-19/20/22 分) は L909 側で並行参照する。
+> 暫定運用は本ノートブックの「11. 最適閾値サマリー」(単勝・馬連) と
+> 「12. 3連単 オッズレンジスイープ」(3連単) を基準とする。
+> 18 桁データが 1 週間分以上溜まった時点で、L919 と比較してトレンド乖離が解消されたか再確認する。
 """)
 
 

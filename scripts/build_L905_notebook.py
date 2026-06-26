@@ -24,42 +24,49 @@ def code(src: str):
 md("""
 # #L905 自動投票 (SPAT4) v01
 
-楽天競馬で取得した T-10/T-3 オッズの **下落率シグナル** で SPAT4 に自動投票する。
+楽天競馬で取得した T-X オッズの **下落率シグナル** で SPAT4 に自動投票する。
+
+## 対応券種・パターン
+| 券種 | パターン | 下落率閾値 | オッズ範囲 | 1R 最大 |
+|---|---|---|---|---|
+| 単勝 | T10 → T3 | -30% 以下 | 2-30 倍 | 1 点 |
+| 馬連 | T10 → T3 | -30% 以下 | 20 倍以上 (上限なし) | 10 点 |
+| **3連単 (試験運用)** | **T30 → T3** | **-30% 以下** | **2000-5000 倍** | **20 点** (stake 50円) |
 
 ## 動作フロー
 1. `data/odds_snapshots/` を `poll_interval_sec` ごとに監視
-2. 新規 T-3 ファイルを検出 → 同 race_id の T-10 を探す
-3. `(odds_T3 - odds_T10) / odds_T10 * 100` を計算
-4. 設定閾値以下の買い目を抽出
-   - 単勝: `tan_change_rate_max` 以下 (デフォルト -40%)
-   - 馬連: `uma_change_rate_max` 以下 (デフォルト -50%)
-5. オッズ範囲・1レース上限・1日上限を適用してフィルタ
+2. 新規 T-3 ファイルを検出 → 同 race_id の T-START を探す (券種別)
+3. `(odds_T3 - odds_TSTART) / odds_TSTART * 100` を計算
+4. 設定閾値以下 + オッズ範囲フィルタで買い目抽出
+5. 1レース上限・1日上限を適用
 6. SPAT4 で投票 (DRY-RUN モードでは画面操作のみ、確定はしない)
 
-## 設定
-すべての閾値・上限は `config/spat4_credentials.json` で変更可能。
-gitignore 済みなので機密情報はリポジトリに入らない。
+## 設定 (`config/l905_settings.json`)
 
 | キー | デフォルト | 説明 |
 |---|---|---|
-| `thresholds.T_START` | T10 | 比較元 T-label |
-| `thresholds.T_END` | T3 | 比較先 T-label (= 発火タイミング) |
-| `thresholds.tan_change_rate_max` | -30.0 | 単勝の change_rate(%) 上限 (これ以下で買う) — #L909 集計の最適 -32% / 期待回収率 138% を踏まえた暫定 |
-| `thresholds.uma_change_rate_max` | -30.0 | 馬連の change_rate(%) 上限 (これ以下で買う) — #L909 集計の最適 -32% / 期待回収率 193% を踏まえた暫定 |
-| `betting.stake_yen` | 100 | 1 買い目あたりの賭け金 |
-| `betting.dry_run` | true | 投票を確定しない (ログ出力のみ) |
-| `betting.max_bets_per_race_tan` | 1 | 単勝の 1 レースあたり最大買い目数 (下落率最大のものを残す) |
-| `betting.max_bets_per_race_uma` | 10 | 馬連の 1 レースあたり最大買い目数 (下落率最大のものを残す) |
-| `betting.max_total_bets_per_day` | 500 | 1 日累計上限 |
-| `betting.min_odds_to_buy` | 1.5 | この単勝オッズ未満は買わない |
-| `betting.max_odds_to_buy` | 2000.0 | この単勝オッズ超過は買わない |
-| `operation.poll_interval_sec` | 10 | スナップショット監視ポーリング間隔 |
-| `operation.data_root` | (自動検出, 最低優先) | データルート。G:/マイドライブ/ → D:/ → C:/ の順に **実在チェック** で自動採用 (= サブPC では config を無視して G ドライブを選ぶ)。明示指定したい場合は `NAR_DATA_ROOT` 環境変数 |
+| `thresholds.T_START` / `T_END` | T10 / T3 | 単勝・馬連の比較窓 |
+| `thresholds.san_T_START` / `san_T_END` | T30 / T3 | **3連単の比較窓 (別パターン)** |
+| `thresholds.tan_change_rate_max` | -30.0 | 単勝の change_rate(%) 上限 |
+| `thresholds.uma_change_rate_max` | -30.0 | 馬連の change_rate(%) 上限 |
+| `thresholds.san_change_rate_max` | -30.0 | **3連単の change_rate(%) 上限** |
+| `betting.stake_yen` | 100 | 単勝・馬連 1 買い目あたりの賭け金 |
+| `betting.stake_yen_san` | 50 | **3連単 1 買い目あたりの賭け金 (試験運用半額)** |
+| `betting.max_bets_per_race_tan/uma/san` | 1 / 10 / 20 | 券種別 1R 最大買い目数 (下落率最大優先) |
+| `betting.max_total_bets_per_day` | 1000 | 1 日累計上限 |
+| `betting.min_odds_tan` / `max_odds_tan` | 2.0 / 30.0 | 単勝オッズ範囲 |
+| `betting.min_odds_uma` / `max_odds_uma` | 20.0 / 9999.0 | 馬連オッズ範囲 |
+| `betting.min_odds_san` / `max_odds_san` | 2000.0 / 5000.0 | **3連単オッズ範囲** |
+| `betting.san_enabled` | true | **3連単シグナル算出の ON/OFF** |
+| `betting.san_dry_run_only` | true | **3連単は DRY-RUN のみ** (SPAT4 LIVE 投票画面 DOM 確認後に false へ) |
+| `safety.daily_loss_stop_yen` | -50000 | 日次損切ライン (まだ ENFORCE 未実装、ログ表示のみ) |
+| `safety.total_drawdown_stop_yen` | -200000 | 累積 DD ストップ (同上) |
+| `operation.data_root` | (自動検出) | G: → D: → C: の順に **実在チェック** で自動採用 |
 
 ## ⚠ 安全運用
 - **DRY-RUN がデフォルト**。`dry_run: false` に手動切替するまで投票は確定されない
+- **3連単は `san_dry_run_only: true` で多重ガード**。LIVE 投票は SPAT4 投票画面 DOM 確認 + `racing_common.spat4.place_san_bet()` の `_open_ticket_type_page` / `_fill_bet_selection` 拡張が必要
 - LIVE 運用前に手動で SPAT4 にログインして残高・買い目を確認
-- 初日は `stake_yen: 100`、`max_total_bets_per_day: 5` 程度から開始
 - 異常検出時は Ctrl+C で即停止可能
 """)
 
@@ -94,20 +101,31 @@ CONFIG_PATH = NAR_ROOT / 'config' / 'spat4_credentials.json'
 
 config = spat4.load_config(CONFIG_PATH)
 
-# 閾値
+# 閾値 (券種別、3連単は別パターン T30→T3 を許可)
 T_START = config['thresholds']['T_START']
 T_END   = config['thresholds']['T_END']
 TAN_CHANGE_RATE_MAX = config['thresholds']['tan_change_rate_max']
 UMA_CHANGE_RATE_MAX = config['thresholds']['uma_change_rate_max']
+SAN_T_START         = config['thresholds'].get('san_T_START', 'T30')
+SAN_T_END           = config['thresholds'].get('san_T_END',   'T3')
+SAN_CHANGE_RATE_MAX = config['thresholds'].get('san_change_rate_max', -30.0)
 
 # 投票設定
 STAKE_YEN              = config['betting']['stake_yen']
+STAKE_YEN_SAN          = config['betting'].get('stake_yen_san', STAKE_YEN)
 DRY_RUN                = config['betting']['dry_run']
 MAX_BETS_PER_RACE_TAN  = config['betting']['max_bets_per_race_tan']
 MAX_BETS_PER_RACE_UMA  = config['betting']['max_bets_per_race_uma']
+MAX_BETS_PER_RACE_SAN  = config['betting'].get('max_bets_per_race_san', 0)
 MAX_TOTAL_BETS_PER_DAY = config['betting']['max_total_bets_per_day']
-MIN_ODDS_TO_BUY        = config['betting']['min_odds_to_buy']
-MAX_ODDS_TO_BUY        = config['betting']['max_odds_to_buy']
+MIN_ODDS_TAN           = config['betting'].get('min_odds_tan', config['betting'].get('min_odds_to_buy', 1.5))
+MAX_ODDS_TAN           = config['betting'].get('max_odds_tan', config['betting'].get('max_odds_to_buy', 2000.0))
+MIN_ODDS_UMA           = config['betting'].get('min_odds_uma', 0.0)
+MAX_ODDS_UMA           = config['betting'].get('max_odds_uma', 99999.0)
+MIN_ODDS_SAN           = config['betting'].get('min_odds_san', 0.0)
+MAX_ODDS_SAN           = config['betting'].get('max_odds_san', 99999.0)
+SAN_ENABLED            = bool(config['betting'].get('san_enabled', False))
+SAN_DRY_RUN_ONLY       = bool(config['betting'].get('san_dry_run_only', True))
 
 # 運用設定 — data_root はマシン環境を自動判定
 def _resolve_data_root() -> Path:
@@ -159,11 +177,12 @@ else:
         print(f'メール通知: 環境変数未設定 — 送信スキップ')
 
 print(f'CONFIG_PATH: {CONFIG_PATH}')
-print(f'T_START → T_END: {T_START} → {T_END}')
-print(f'閾値: 単勝 ≤ {TAN_CHANGE_RATE_MAX}% / 馬連 ≤ {UMA_CHANGE_RATE_MAX}%')
-print(f'STAKE: {STAKE_YEN}円  /  DRY_RUN: {DRY_RUN}')
-print(f'上限: 単勝{MAX_BETS_PER_RACE_TAN}点/race  馬連{MAX_BETS_PER_RACE_UMA}点/race  累計{MAX_TOTAL_BETS_PER_DAY}/day')
-print(f'オッズ範囲フィルタ (単勝): {MIN_ODDS_TO_BUY} 〜 {MAX_ODDS_TO_BUY}')
+print(f'T_START → T_END: 単勝/馬連 {T_START}→{T_END}  /  3連単 {SAN_T_START}→{SAN_T_END}')
+print(f'閾値: 単勝 ≤ {TAN_CHANGE_RATE_MAX}% / 馬連 ≤ {UMA_CHANGE_RATE_MAX}% / 3連単 ≤ {SAN_CHANGE_RATE_MAX}%')
+print(f'STAKE: 単勝/馬連 {STAKE_YEN}円  /  3連単 {STAKE_YEN_SAN}円  /  DRY_RUN: {DRY_RUN}')
+print(f'上限: 単勝{MAX_BETS_PER_RACE_TAN}点/race  馬連{MAX_BETS_PER_RACE_UMA}点/race  3連単{MAX_BETS_PER_RACE_SAN}点/race  累計{MAX_TOTAL_BETS_PER_DAY}/day')
+print(f'オッズ範囲: 単勝 {MIN_ODDS_TAN}〜{MAX_ODDS_TAN}  /  馬連 {MIN_ODDS_UMA}〜{MAX_ODDS_UMA}  /  3連単 {MIN_ODDS_SAN}〜{MAX_ODDS_SAN}')
+print(f'3連単: enabled={SAN_ENABLED}  dry_run_only={SAN_DRY_RUN_ONLY}')
 print(f'監視dir: {SNAPSHOT_DIR}')
 """)
 
@@ -204,9 +223,9 @@ def load_latest_snapshot(race_id: str, label: str, kind: str) -> pd.DataFrame:
 def compute_signals_for_race(race_id: str) -> dict:
     \"\"\"指定 race_id について T_START → T_END の change_rate を計算し、シグナル買い目を返す。
 
-    Returns: {'tan_bets': [...], 'uma_bets': [...], 'race_id': ...}
+    Returns: {'tan_bets': [...], 'uma_bets': [...], 'san_bets': [...], 'race_id': ...}
     \"\"\"
-    bets = {'race_id': race_id, 'tan_bets': [], 'uma_bets': []}
+    bets = {'race_id': race_id, 'tan_bets': [], 'uma_bets': [], 'san_bets': []}
 
     # ── 単勝 (tanfuku) ──
     df_t_start = load_latest_snapshot(race_id, T_START, 'tanfuku')
@@ -218,10 +237,10 @@ def compute_signals_for_race(race_id: str) -> dict:
         m = m.dropna(subset=['odds_start', 'odds_end'])
         m = m[m['odds_start'] > 0]
         m['change_rate'] = (m['odds_end'] - m['odds_start']) / m['odds_start'] * 100
-        # 閾値判定 + オッズ範囲フィルタ
+        # 閾値判定 + 単勝オッズ範囲フィルタ
         hits = m[(m['change_rate'] <= TAN_CHANGE_RATE_MAX)
-                 & (m['odds_end'] >= MIN_ODDS_TO_BUY)
-                 & (m['odds_end'] <= MAX_ODDS_TO_BUY)]
+                 & (m['odds_end'] >= MIN_ODDS_TAN)
+                 & (m['odds_end'] <= MAX_ODDS_TAN)]
         for _, r in hits.iterrows():
             bets['tan_bets'].append({
                 'umaban': int(r['umaban']),
@@ -242,7 +261,10 @@ def compute_signals_for_race(race_id: str) -> dict:
         m = m.dropna(subset=['odds_start', 'odds_end'])
         m = m[m['odds_start'] > 0]
         m['change_rate'] = (m['odds_end'] - m['odds_start']) / m['odds_start'] * 100
-        hits = m[m['change_rate'] <= UMA_CHANGE_RATE_MAX]
+        # 閾値判定 + 馬連オッズ範囲フィルタ
+        hits = m[(m['change_rate'] <= UMA_CHANGE_RATE_MAX)
+                 & (m['odds_end'] >= MIN_ODDS_UMA)
+                 & (m['odds_end'] <= MAX_ODDS_UMA)]
         for _, r in hits.iterrows():
             bets['uma_bets'].append({
                 'P1': int(r['P1']),
@@ -251,6 +273,31 @@ def compute_signals_for_race(race_id: str) -> dict:
                 'odds_end': float(r['odds_end']),
                 'change_rate': float(r['change_rate']),
             })
+
+    # ── 3連単 (sanrentan) ── A 型試験運用 (T30→T3 -30% + オッズ 2000-5000倍)
+    if SAN_ENABLED:
+        df_s_start = load_latest_snapshot(race_id, SAN_T_START, 'sanrentan')
+        df_s_end   = load_latest_snapshot(race_id, SAN_T_END,   'sanrentan')
+        if not df_s_start.empty and not df_s_end.empty:
+            cols = ['P1', 'P2', 'P3', 'odds_sanrentan']
+            m = df_s_start[cols].rename(columns={'odds_sanrentan': 'odds_start'}) \\
+                  .merge(df_s_end[cols].rename(columns={'odds_sanrentan': 'odds_end'}),
+                         on=['P1', 'P2', 'P3'])
+            m = m.dropna(subset=['odds_start', 'odds_end'])
+            m = m[m['odds_start'] > 0]
+            m['change_rate'] = (m['odds_end'] - m['odds_start']) / m['odds_start'] * 100
+            hits = m[(m['change_rate'] <= SAN_CHANGE_RATE_MAX)
+                     & (m['odds_end'] >= MIN_ODDS_SAN)
+                     & (m['odds_end'] <= MAX_ODDS_SAN)]
+            for _, r in hits.iterrows():
+                bets['san_bets'].append({
+                    'P1': int(r['P1']),
+                    'P2': int(r['P2']),
+                    'P3': int(r['P3']),
+                    'odds_start': float(r['odds_start']),
+                    'odds_end': float(r['odds_end']),
+                    'change_rate': float(r['change_rate']),
+                })
 
     return bets
 """)
@@ -337,11 +384,15 @@ daily_counter = DailyBetCounter(MAX_TOTAL_BETS_PER_DAY)
 
 
 def _format_bet_notification(race_info: dict, tan_bets: list, uma_bets: list,
-                              t_start: str, t_end: str) -> tuple:
+                              san_bets: list, t_start: str, t_end: str) -> tuple:
     \"\"\"買い目通知のメール件名・本文を生成。\"\"\"
-    n_tan, n_uma = len(tan_bets), len(uma_bets)
+    n_tan, n_uma, n_san = len(tan_bets), len(uma_bets), len(san_bets)
+    parts = []
+    if n_tan: parts.append(f'単勝{n_tan}')
+    if n_uma: parts.append(f'馬連{n_uma}')
+    if n_san: parts.append(f'3連単{n_san}')
     subj = (f'[NAR L905] 買い目 {race_info.get("venue","?")} '
-            f'R{race_info.get("race_num","?")} 単勝{n_tan} 馬連{n_uma}'
+            f'R{race_info.get("race_num","?")} ' + ' '.join(parts)
             + (' [DRY-RUN]' if DRY_RUN else ''))
 
     lines = []
@@ -349,7 +400,8 @@ def _format_bet_notification(race_info: dict, tan_bets: list, uma_bets: list,
     lines.append(f'venue   : {race_info.get("venue","")}  R{race_info.get("race_num","")}')
     lines.append(f'race_date: {race_info.get("race_date","")}')
     lines.append(f'mode    : {"DRY-RUN" if DRY_RUN else "LIVE"}')
-    lines.append(f'閾値    : {t_start} → {t_end}  /  単勝 ≤ {TAN_CHANGE_RATE_MAX}%  馬連 ≤ {UMA_CHANGE_RATE_MAX}%')
+    lines.append(f'閾値    : 単勝/馬連 {t_start}→{t_end} (-{abs(TAN_CHANGE_RATE_MAX)}%/-{abs(UMA_CHANGE_RATE_MAX)}%)'
+                 f'  /  3連単 {SAN_T_START}→{SAN_T_END} (-{abs(SAN_CHANGE_RATE_MAX)}%)')
     lines.append('')
 
     if tan_bets:
@@ -370,7 +422,17 @@ def _format_bet_notification(race_info: dict, tan_bets: list, uma_bets: list,
                           f'({b["change_rate"]:+.2f}%)')
         lines.append('')
 
-    lines.append(f'stake   : {STAKE_YEN}円 × {n_tan + n_uma} 点')
+    if san_bets:
+        lines.append(f'■ 3連単 ({n_san} 点) ※試験運用 stake={STAKE_YEN_SAN}円')
+        for b in san_bets:
+            lines.append(f'  {b["P1"]:>2}-{b["P2"]:>2}-{b["P3"]:<2}  '
+                          f'{SAN_T_START}={b["odds_start"]:>8.1f}  →  '
+                          f'{SAN_T_END}={b["odds_end"]:>8.1f}  '
+                          f'({b["change_rate"]:+.2f}%)')
+        lines.append('')
+
+    invest = STAKE_YEN * (n_tan + n_uma) + STAKE_YEN_SAN * n_san
+    lines.append(f'stake   : 単勝/馬連 {STAKE_YEN}円 × {n_tan + n_uma} + 3連単 {STAKE_YEN_SAN}円 × {n_san} = {invest:,d}円')
     return subj, '\\n'.join(lines)
 
 
@@ -379,16 +441,19 @@ def execute_bets_for_race(sess: spat4.Spat4Session, driver, race_info: dict, sig
 
     change_rate が小さいもの (= 下落率が大きいもの) から優先して採用し、
     kind ごとに max_bets_per_race_* で打ち切る。
+    3連単は san_dry_run_only=True の間は DRY-RUN ログのみ。
     \"\"\"
     # change_rate 昇順 (最も負 = 下落率最大 が先頭) でソート
     tan_sorted = sorted(signals['tan_bets'], key=lambda b: b['change_rate'])
     uma_sorted = sorted(signals['uma_bets'], key=lambda b: b['change_rate'])
+    san_sorted = sorted(signals.get('san_bets', []), key=lambda b: b['change_rate'])
     tan_bets = tan_sorted[:MAX_BETS_PER_RACE_TAN]
     uma_bets = uma_sorted[:MAX_BETS_PER_RACE_UMA]
+    san_bets = san_sorted[:MAX_BETS_PER_RACE_SAN] if SAN_ENABLED else []
 
     # ── メール通知 (DRY-RUN/LIVE 両方で送信) ──
-    if tan_bets or uma_bets:
-        subj, body = _format_bet_notification(race_info, tan_bets, uma_bets, T_START, T_END)
+    if tan_bets or uma_bets or san_bets:
+        subj, body = _format_bet_notification(race_info, tan_bets, uma_bets, san_bets, T_START, T_END)
         try:
             sent = send_email_if_configured(subj, body)
             if sent:
@@ -398,7 +463,7 @@ def execute_bets_for_race(sess: spat4.Spat4Session, driver, race_info: dict, sig
         except Exception as e:
             print(f'  [MAIL ERROR] {e}')
 
-    total_to_bet = len(tan_bets) + len(uma_bets)
+    total_to_bet = len(tan_bets) + len(uma_bets) + len(san_bets)
     if total_to_bet == 0:
         return
 
@@ -414,20 +479,44 @@ def execute_bets_for_race(sess: spat4.Spat4Session, driver, race_info: dict, sig
         if not log_exists:
             f.write('timestamp,race_id,venue,race_num,kenshu,combo,odds_start,odds_end,change_rate,stake,dry_run,result\\n')
 
+        # 単勝・馬連はバッチ API で一括投票 (racing_common.spat4 v2)
+        bet_ok = True
+        if tan_bets or uma_bets:
+            r = sess.place_bets_for_race(driver, race_info,
+                                          tan_bets=tan_bets, uma_bets=uma_bets,
+                                          stake_yen=STAKE_YEN)
+            bet_ok = r.get('ok', False)
+
         for b in tan_bets:
-            r = sess.place_tan_bet(driver, race_info, umaban=b['umaban'], stake_yen=STAKE_YEN)
             f.write(f'{datetime.now().isoformat(timespec="seconds")},{race_info["race_id"]},'
                     f'{race_info["venue"]},{race_info["race_num"]},tan,{b["umaban"]},'
                     f'{b["odds_start"]},{b["odds_end"]},{b["change_rate"]:.2f},'
-                    f'{STAKE_YEN},{DRY_RUN},{r["ok"]}\\n')
+                    f'{STAKE_YEN},{DRY_RUN},{bet_ok}\\n')
             daily_counter.add()
 
         for b in uma_bets:
-            r = sess.place_uma_bet(driver, race_info, p1=b['P1'], p2=b['P2'], stake_yen=STAKE_YEN)
             f.write(f'{datetime.now().isoformat(timespec="seconds")},{race_info["race_id"]},'
                     f'{race_info["venue"]},{race_info["race_num"]},uma,{b["P1"]}-{b["P2"]},'
                     f'{b["odds_start"]},{b["odds_end"]},{b["change_rate"]:.2f},'
-                    f'{STAKE_YEN},{DRY_RUN},{r["ok"]}\\n')
+                    f'{STAKE_YEN},{DRY_RUN},{bet_ok}\\n')
+            daily_counter.add()
+
+        # 3連単: san_dry_run_only=True の間は DRY-RUN ログのみ (バッチ API 未対応)
+        for b in san_bets:
+            san_force_dry = DRY_RUN or SAN_DRY_RUN_ONLY
+            combo = f'{b["P1"]}-{b["P2"]}-{b["P3"]}'
+            if san_force_dry:
+                reason = "DRY_RUN" if DRY_RUN else "san_dry_run_only"
+                print(f'  [DRY-RUN BET] 3連単 {combo} stake={STAKE_YEN_SAN}円 ({reason})')
+                ok = True
+            else:
+                # LIVE 投票は racing_common.spat4 が batch API に統合済み。3連単は未対応。
+                print(f'  [SAN SKIP] 3連単 LIVE 投票は未対応 (san_dry_run_only=true で運用してください): {combo}')
+                ok = False
+            f.write(f'{datetime.now().isoformat(timespec="seconds")},{race_info["race_id"]},'
+                    f'{race_info["venue"]},{race_info["race_num"]},san,{combo},'
+                    f'{b["odds_start"]},{b["odds_end"]},{b["change_rate"]:.2f},'
+                    f'{STAKE_YEN_SAN},{DRY_RUN or SAN_DRY_RUN_ONLY},{ok}\\n')
             daily_counter.add()
 """)
 
@@ -447,6 +536,10 @@ def test_signal_for_race(race_id: str):
     print(f'  馬連シグナル: {len(sig["uma_bets"])} 件')
     for b in sig['uma_bets']:
         print(f'    {b["P1"]}-{b["P2"]}: {b["odds_start"]:.1f} → {b["odds_end"]:.1f}  ({b["change_rate"]:+.1f}%)')
+    san_bets = sig.get('san_bets', [])
+    print(f'  3連単シグナル: {len(san_bets)} 件 (SAN_ENABLED={SAN_ENABLED})')
+    for b in san_bets:
+        print(f'    {b["P1"]}-{b["P2"]}-{b["P3"]}: {b["odds_start"]:.1f} → {b["odds_end"]:.1f}  ({b["change_rate"]:+.1f}%)')
 
 
 # 既存 race_id のサンプルで確認
