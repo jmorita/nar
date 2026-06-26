@@ -479,13 +479,18 @@ def execute_bets_for_race(sess: spat4.Spat4Session, driver, race_info: dict, sig
         if not log_exists:
             f.write('timestamp,race_id,venue,race_num,kenshu,combo,odds_start,odds_end,change_rate,stake,dry_run,result\\n')
 
-        # 単勝・馬連はバッチ API で一括投票 (racing_common.spat4 v2)
+        # 単勝・馬連・3連単をバッチ API で一括投票 (racing_common.spat4 v2)
+        # san_dry_run_only=True の間は live_san を空にして LIVE 投票を除外
+        live_san = san_bets if (not DRY_RUN and not SAN_DRY_RUN_ONLY) else []
         bet_ok = True
-        if tan_bets or uma_bets:
-            r = sess.place_bets_for_race(driver, race_info,
-                                          tan_bets=tan_bets, uma_bets=uma_bets,
-                                          stake_yen=STAKE_YEN)
-            bet_ok = r.get('ok', False)
+        san_result = {}
+        if tan_bets or uma_bets or live_san:
+            san_result = sess.place_bets_for_race(driver, race_info,
+                                                   tan_bets=tan_bets, uma_bets=uma_bets,
+                                                   san_bets=live_san,
+                                                   stake_yen=STAKE_YEN,
+                                                   stake_yen_san=STAKE_YEN_SAN)
+            bet_ok = san_result.get('ok', False)
 
         for b in tan_bets:
             f.write(f'{datetime.now().isoformat(timespec="seconds")},{race_info["race_id"]},'
@@ -501,7 +506,7 @@ def execute_bets_for_race(sess: spat4.Spat4Session, driver, race_info: dict, sig
                     f'{STAKE_YEN},{DRY_RUN},{bet_ok}\\n')
             daily_counter.add()
 
-        # 3連単: san_dry_run_only=True の間は DRY-RUN ログのみ (バッチ API 未対応)
+        # 3連単ログ: san_dry_run_only=True は DRY-RUN ログのみ、False は LIVE 結果を記録
         for b in san_bets:
             san_force_dry = DRY_RUN or SAN_DRY_RUN_ONLY
             combo = f'{b["P1"]}-{b["P2"]}-{b["P3"]}'
@@ -510,9 +515,8 @@ def execute_bets_for_race(sess: spat4.Spat4Session, driver, race_info: dict, sig
                 print(f'  [DRY-RUN BET] 3連単 {combo} stake={STAKE_YEN_SAN}円 ({reason})')
                 ok = True
             else:
-                # LIVE 投票は racing_common.spat4 が batch API に統合済み。3連単は未対応。
-                print(f'  [SAN SKIP] 3連単 LIVE 投票は未対応 (san_dry_run_only=true で運用してください): {combo}')
-                ok = False
+                san_errs = san_result.get('san_errors', [])
+                ok = not any(combo in e for e in san_errs)
             f.write(f'{datetime.now().isoformat(timespec="seconds")},{race_info["race_id"]},'
                     f'{race_info["venue"]},{race_info["race_num"]},san,{combo},'
                     f'{b["odds_start"]},{b["odds_end"]},{b["change_rate"]:.2f},'
