@@ -113,7 +113,7 @@ SAN_CHANGE_RATE_MAX = config['thresholds'].get('san_change_rate_max', -30.0)
 # 投票設定
 STAKE_YEN              = config['betting']['stake_yen']
 STAKE_YEN_SAN          = config['betting'].get('stake_yen_san', STAKE_YEN)
-DRY_RUN                = config['betting']['dry_run']
+DRY_RUN                = bool(config['betting'].get('dry_run', False))
 MAX_BETS_PER_RACE_TAN  = config['betting']['max_bets_per_race_tan']
 MAX_BETS_PER_RACE_UMA  = config['betting']['max_bets_per_race_uma']
 MAX_BETS_PER_RACE_SAN  = config['betting'].get('max_bets_per_race_san', 0)
