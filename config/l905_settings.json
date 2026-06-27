@@ -2,28 +2,29 @@
   "_comment": "L905 自動投票の設定 (閾値・上限・運用)。本ファイルは git 管理されサブPCへ pull で同期される。認証情報は spat4_credentials.json (gitignored) に分離。",
 
   "thresholds": {
-    "_comment": "券種別の T_START → T_END と change_rate (%) 閾値。3連単は T-30 → T-3 が L929 検証で最良。",
+    "_comment": "券種別の T_START → T_END と change_rate (%) 閾値。3連単は T-30 → T-3 が L929 検証で最良。2026-06-27 改善: 単勝 -30→-34 / 3連単 -30→-32。",
     "T_START": "T10",
     "T_END": "T3",
-    "tan_change_rate_max": -30.0,
+    "tan_change_rate_max": -34.0,
     "uma_change_rate_max": -30.0,
     "san_T_START": "T30",
     "san_T_END": "T3",
-    "san_change_rate_max": -30.0
+    "san_change_rate_max": -32.0
   },
 
   "betting": {
-    "_comment_san": "3連単 A 型 試験運用 (2026-06-26 開始, stake_yen_san=50 半額)。L929 集計で PL +1.3M / PL_ex_max +57万 を確認。安定したら 100 円に戻す。",
+    "_comment_san": "3連単 A 型 試験運用 (2026-06-26 開始, stake_yen_san=50 半額)。L929 集計で PL +1.1M / PL_ex_max +36万 を確認。安定したら 100 円に戻す。",
+    "_comment_filter_2026_06_27": "改善: 単勝下限 2→10 (低オッズ大不調を除外) / 馬連上限 9999→500 (高オッズ 1ヒット依存を抑制)",
     "stake_yen": 100,
     "stake_yen_san": 50,
     "max_bets_per_race_tan": 1,
     "max_bets_per_race_uma": 10,
     "max_bets_per_race_san": 20,
     "max_total_bets_per_day": 1000,
-    "min_odds_tan": 2.0,
+    "min_odds_tan": 10.0,
     "max_odds_tan": 30.0,
     "min_odds_uma": 20.0,
-    "max_odds_uma": 9999.0,
+    "max_odds_uma": 500.0,
     "min_odds_san": 2000.0,
     "max_odds_san": 5000.0,
     "san_enabled": true,
