@@ -110,14 +110,14 @@ SAN_T_START         = config['thresholds'].get('san_T_START', 'T30')
 SAN_T_END           = config['thresholds'].get('san_T_END',   'T3')
 SAN_CHANGE_RATE_MAX = config['thresholds'].get('san_change_rate_max', -30.0)
 
-# 投票設定
-STAKE_YEN              = config['betting']['stake_yen']
+# 投票設定 (キー欠落時は安全側にフォールバック)
+STAKE_YEN              = config['betting'].get('stake_yen', 100)
 STAKE_YEN_SAN          = config['betting'].get('stake_yen_san', STAKE_YEN)
-DRY_RUN                = config['betting']['dry_run']
-MAX_BETS_PER_RACE_TAN  = config['betting']['max_bets_per_race_tan']
-MAX_BETS_PER_RACE_UMA  = config['betting']['max_bets_per_race_uma']
+DRY_RUN                = bool(config['betting'].get('dry_run', False))
+MAX_BETS_PER_RACE_TAN  = config['betting'].get('max_bets_per_race_tan', 1)
+MAX_BETS_PER_RACE_UMA  = config['betting'].get('max_bets_per_race_uma', 10)
 MAX_BETS_PER_RACE_SAN  = config['betting'].get('max_bets_per_race_san', 0)
-MAX_TOTAL_BETS_PER_DAY = config['betting']['max_total_bets_per_day']
+MAX_TOTAL_BETS_PER_DAY = config['betting'].get('max_total_bets_per_day', 500)
 MIN_ODDS_TAN           = config['betting'].get('min_odds_tan', config['betting'].get('min_odds_to_buy', 1.5))
 MAX_ODDS_TAN           = config['betting'].get('max_odds_tan', config['betting'].get('max_odds_to_buy', 2000.0))
 MIN_ODDS_UMA           = config['betting'].get('min_odds_uma', 0.0)
@@ -125,7 +125,7 @@ MAX_ODDS_UMA           = config['betting'].get('max_odds_uma', 99999.0)
 MIN_ODDS_SAN           = config['betting'].get('min_odds_san', 0.0)
 MAX_ODDS_SAN           = config['betting'].get('max_odds_san', 99999.0)
 SAN_ENABLED            = bool(config['betting'].get('san_enabled', False))
-SAN_DRY_RUN_ONLY       = bool(config['betting'].get('san_dry_run_only', True))
+SAN_DRY_RUN_ONLY       = bool(config['betting'].get('san_dry_run_only', False))
 
 # 運用設定 — data_root はマシン環境を自動判定
 def _resolve_data_root() -> Path:
