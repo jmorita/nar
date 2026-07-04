@@ -31,7 +31,8 @@ md("""
 |---|---|---|---|---|
 | 単勝 | T10 → T3 | -30% 以下 | 2-30 倍 | 1 点 |
 | 馬連 | T10 → T3 | -30% 以下 | 20 倍以上 (上限なし) | 10 点 |
-| **3連単 (試験運用)** | **T30 → T3** | **-30% 以下** | **2000-5000 倍** | **20 点** (stake 50円) |
+| **3連単①** | **T30 → T3** | **-30% 以下** | **2000-5000 倍** | **20 点** (stake 100円, 実弾) |
+| **3連単② (別発火)** | **T30 → T10** | **-50% 以下** | **2000-5000 倍** | **30 点** (stake 100円, 実弾) |
 
 ## 動作フロー
 1. `data/odds_snapshots/` を `poll_interval_sec` ごとに監視
@@ -51,17 +52,19 @@ md("""
 | `thresholds.uma_change_rate_max` | -30.0 | 馬連の change_rate(%) 上限 |
 | `thresholds.san_change_rate_max` | -30.0 | **3連単の change_rate(%) 上限** |
 | `betting.stake_yen` | 100 | 単勝・馬連 1 買い目あたりの賭け金 |
-| `betting.stake_yen_san` | 50 | **3連単 1 買い目あたりの賭け金 (試験運用半額)** |
+| `betting.stake_yen_san` | 100 | **3連単 1 買い目あたりの賭け金** |
+| `betting.stake_yen_san2` | 100 | **① 3連単②(T30→T10) 1 買い目あたりの賭け金** |
 | `betting.max_bets_per_race_tan/uma/san` | 1 / 10 / 20 | 券種別 1R 最大買い目数 (下落率最大優先) |
 | `betting.max_total_bets_per_day` | 1000 | 1 日累計上限 |
 | `betting.min_odds_tan` / `max_odds_tan` | 2.0 / 30.0 | 単勝オッズ範囲 |
 | `betting.min_odds_uma` / `max_odds_uma` | 20.0 / 9999.0 | 馬連オッズ範囲 |
 | `betting.min_odds_san` / `max_odds_san` | 2000.0 / 5000.0 | **3連単オッズ範囲** |
 | `betting.san_enabled` | true | **3連単シグナル算出の ON/OFF** |
-| `betting.san_dry_run_only` | true | **3連単は DRY-RUN のみ** (SPAT4 LIVE 投票画面 DOM 確認後に false へ) |
+| `betting.san_dry_run_only` | false | **3連単も実弾投票** (2026-07-04 実弾化) |
+| `betting.san2_enabled` / `san2_dry_run_only` | true / false | **① 3連単②(T30→T10 -50%) を実弾で別発火** |
 | `safety.daily_loss_stop_yen` | -50000 | 日次損切ライン (まだ ENFORCE 未実装、ログ表示のみ) |
 | `safety.total_drawdown_stop_yen` | -200000 | 累積 DD ストップ (同上) |
-| `operation.data_root` | (自動検出) | G: → D: → C: の順に **実在チェック** で自動採用 |
+| `operation.data_root` | (自動検出) | D: → G: → C: の順に **実在チェック** で自動採用 (メインPC は D 優先) |
 
 ## ⚠ 安全運用
 - **DRY-RUN がデフォルト**。`dry_run: false` に手動切替するまで投票は確定されない
@@ -127,25 +130,36 @@ MAX_ODDS_SAN           = config['betting'].get('max_odds_san', 99999.0)
 SAN_ENABLED            = bool(config['betting'].get('san_enabled', False))
 SAN_DRY_RUN_ONLY       = bool(config['betting'].get('san_dry_run_only', False))
 
+# ── ① 第2の3連単シグナル (T30→T10 大下落, 別タイミング発火) ──
+SAN2_T_START           = config['thresholds'].get('san2_T_START', 'T30')
+SAN2_T_END             = config['thresholds'].get('san2_T_END',   'T10')
+SAN2_CHANGE_RATE_MAX   = config['thresholds'].get('san2_change_rate_max', -50.0)
+SAN2_ENABLED           = bool(config['betting'].get('san2_enabled', False))
+SAN2_DRY_RUN_ONLY      = bool(config['betting'].get('san2_dry_run_only', SAN_DRY_RUN_ONLY))
+MAX_BETS_PER_RACE_SAN2 = config['betting'].get('max_bets_per_race_san2', 30)
+MIN_ODDS_SAN2          = config['betting'].get('min_odds_san2', 2000.0)
+MAX_ODDS_SAN2          = config['betting'].get('max_odds_san2', 5000.0)
+STAKE_YEN_SAN2         = config['betting'].get('stake_yen_san2', STAKE_YEN_SAN)
+
 # 運用設定 — data_root はマシン環境を自動判定
 def _resolve_data_root() -> Path:
     \"\"\"NAR データルートを解決。優先順:
     1. 環境変数 NAR_DATA_ROOT (最優先、明示指定)
-    2. G:/マイドライブ/workspace/nar/data があれば → サブPC と判定
-    3. D:/workspace/nar/data があれば → メインPC と判定
+    2. D:/workspace/nar/data があれば → メインPC と判定 (D 優先)
+    3. G:/マイドライブ/workspace/nar/data があれば → サブPC と判定
     4. C:/Users/ppny9/workspace/nar/data
     5. config.operation.data_root (上記いずれも存在しない場合の fallback)
 
-    サブPC では config に D ドライブのパスが書かれていても **無視して G ドライブを採用** する。
-    意図的に D ドライブを参照したい場合は環境変数 NAR_DATA_ROOT で明示指定する。
+    メインPC は D ドライブを優先。サブPC は D が無いので G にフォールバックする。
+    意図的に別ドライブを参照したい場合は環境変数 NAR_DATA_ROOT で明示指定する。
     \"\"\"
     import os as _os
     env = _os.environ.get('NAR_DATA_ROOT', '')
     if env and Path(env).is_dir():
         return Path(env)
     for p in [
-        'G:/マイドライブ/workspace/nar/data',
         'D:/workspace/nar/data',
+        'G:/マイドライブ/workspace/nar/data',
         'C:/Users/ppny9/workspace/nar/data',
     ]:
         if Path(p).is_dir():
@@ -182,6 +196,7 @@ print(f'閾値: 単勝 ≤ {TAN_CHANGE_RATE_MAX}% / 馬連 ≤ {UMA_CHANGE_RATE_
 print(f'STAKE: 単勝/馬連 {STAKE_YEN}円  /  3連単 {STAKE_YEN_SAN}円  /  DRY_RUN: {DRY_RUN}')
 print(f'上限: 単勝{MAX_BETS_PER_RACE_TAN}点/race  馬連{MAX_BETS_PER_RACE_UMA}点/race  3連単{MAX_BETS_PER_RACE_SAN}点/race  累計{MAX_TOTAL_BETS_PER_DAY}/day')
 print(f'オッズ範囲: 単勝 {MIN_ODDS_TAN}〜{MAX_ODDS_TAN}  /  馬連 {MIN_ODDS_UMA}〜{MAX_ODDS_UMA}  /  3連単 {MIN_ODDS_SAN}〜{MAX_ODDS_SAN}')
+print(f'① 3連単②(別発火): {SAN2_T_START}→{SAN2_T_END} ≤{SAN2_CHANGE_RATE_MAX}% odds {MIN_ODDS_SAN2}〜{MAX_ODDS_SAN2} max{MAX_BETS_PER_RACE_SAN2}点 {STAKE_YEN_SAN2}円  enabled={SAN2_ENABLED} dry_only={SAN2_DRY_RUN_ONLY}')
 print(f'3連単: enabled={SAN_ENABLED}  dry_run_only={SAN_DRY_RUN_ONLY}')
 print(f'監視dir: {SNAPSHOT_DIR}')
 """)
@@ -300,6 +315,33 @@ def compute_signals_for_race(race_id: str) -> dict:
                 })
 
     return bets
+
+
+def compute_san2_signals_for_race(race_id: str) -> dict:
+    # ① 第2の3連単シグナル: SAN2_T_START → SAN2_T_END の change_rate を計算 (T10 発火用)
+    out = {'race_id': race_id, 'san2_bets': []}
+    if not SAN2_ENABLED:
+        return out
+    df_s = load_latest_snapshot(race_id, SAN2_T_START, 'sanrentan')
+    df_e = load_latest_snapshot(race_id, SAN2_T_END,   'sanrentan')
+    if df_s.empty or df_e.empty:
+        return out
+    cols = ['P1', 'P2', 'P3', 'odds_sanrentan']
+    m = df_s[cols].rename(columns={'odds_sanrentan': 'odds_start'}) \\
+          .merge(df_e[cols].rename(columns={'odds_sanrentan': 'odds_end'}), on=['P1', 'P2', 'P3'])
+    m = m.dropna(subset=['odds_start', 'odds_end'])
+    m = m[m['odds_start'] > 0]
+    m['change_rate'] = (m['odds_end'] - m['odds_start']) / m['odds_start'] * 100
+    hits = m[(m['change_rate'] <= SAN2_CHANGE_RATE_MAX)
+             & (m['odds_end'] >= MIN_ODDS_SAN2)
+             & (m['odds_end'] <= MAX_ODDS_SAN2)]
+    for _, r in hits.iterrows():
+        out['san2_bets'].append({
+            'P1': int(r['P1']), 'P2': int(r['P2']), 'P3': int(r['P3']),
+            'odds_start': float(r['odds_start']), 'odds_end': float(r['odds_end']),
+            'change_rate': float(r['change_rate']),
+        })
+    return out
 """)
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -479,13 +521,21 @@ def execute_bets_for_race(sess: spat4.Spat4Session, driver, race_info: dict, sig
         if not log_exists:
             f.write('timestamp,race_id,venue,race_num,kenshu,combo,odds_start,odds_end,change_rate,stake,dry_run,result\\n')
 
-        # 単勝・馬連はバッチ API で一括投票 (racing_common.spat4 v2)
+        # 単勝・馬連・3連単をバッチ API で一括投票 (racing_common.spat4 v2)
+        san_force_dry = DRY_RUN or SAN_DRY_RUN_ONLY
+        # 3連単は個別買い目を 1点=1着×1×1 の 1 フォーメーションとして投票
+        san_formations = ([] if san_force_dry else
+                          [{'p1_list': [b['P1']], 'p2_list': [b['P2']], 'p3_list': [b['P3']],
+                            'n_combos': 1} for b in san_bets])
         bet_ok = True
-        if tan_bets or uma_bets:
+        san_bet_ok = True
+        if tan_bets or uma_bets or san_formations:
             r = sess.place_bets_for_race(driver, race_info,
                                           tan_bets=tan_bets, uma_bets=uma_bets,
-                                          stake_yen=STAKE_YEN)
+                                          san_formations=san_formations,
+                                          stake_yen=STAKE_YEN, stake_yen_san=STAKE_YEN_SAN)
             bet_ok = r.get('ok', False)
+            san_bet_ok = bet_ok
 
         for b in tan_bets:
             f.write(f'{datetime.now().isoformat(timespec="seconds")},{race_info["race_id"]},'
@@ -501,22 +551,67 @@ def execute_bets_for_race(sess: spat4.Spat4Session, driver, race_info: dict, sig
                     f'{STAKE_YEN},{DRY_RUN},{bet_ok}\\n')
             daily_counter.add()
 
-        # 3連単: san_dry_run_only=True の間は DRY-RUN ログのみ (バッチ API 未対応)
+        # 3連単: san_dry_run_only=True なら DRY-RUN ログのみ、それ以外は上のバッチで実投票済み
         for b in san_bets:
-            san_force_dry = DRY_RUN or SAN_DRY_RUN_ONLY
             combo = f'{b["P1"]}-{b["P2"]}-{b["P3"]}'
             if san_force_dry:
                 reason = "DRY_RUN" if DRY_RUN else "san_dry_run_only"
                 print(f'  [DRY-RUN BET] 3連単 {combo} stake={STAKE_YEN_SAN}円 ({reason})')
                 ok = True
             else:
-                # LIVE 投票は racing_common.spat4 が batch API に統合済み。3連単は未対応。
-                print(f'  [SAN SKIP] 3連単 LIVE 投票は未対応 (san_dry_run_only=true で運用してください): {combo}')
-                ok = False
+                ok = san_bet_ok
+                print(f'  [LIVE BET] 3連単 {combo} stake={STAKE_YEN_SAN}円 ok={ok}')
             f.write(f'{datetime.now().isoformat(timespec="seconds")},{race_info["race_id"]},'
                     f'{race_info["venue"]},{race_info["race_num"]},san,{combo},'
                     f'{b["odds_start"]},{b["odds_end"]},{b["change_rate"]:.2f},'
-                    f'{STAKE_YEN_SAN},{DRY_RUN or SAN_DRY_RUN_ONLY},{ok}\\n')
+                    f'{STAKE_YEN_SAN},{san_force_dry},{ok}\\n')
+            daily_counter.add()
+
+
+def execute_san2_bets_for_race(sess, driver, race_info: dict, san2_signals: dict):
+    # ① 3連単 T30→T10 の投票 (san2_dry_run_only=True なら DRY-RUN ログのみ、それ以外は実投票)
+    san2_sorted = sorted(san2_signals.get('san2_bets', []), key=lambda b: b['change_rate'])
+    san2_bets = san2_sorted[:MAX_BETS_PER_RACE_SAN2]
+    if not san2_bets:
+        return
+    # メール通知 (①発火)
+    try:
+        subj = f'[L905①] 3連単② {race_info.get("venue","?")} R{race_info.get("race_num","?")} {len(san2_bets)}点 (T10発火)'
+        body = '\\n'.join(f'{b["P1"]}-{b["P2"]}-{b["P3"]}  {b["odds_start"]:.1f}->{b["odds_end"]:.1f} ({b["change_rate"]:+.1f}%)'
+                          for b in san2_bets)
+        send_email_if_configured(subj, body)
+    except Exception as _e:
+        print(f'  [MAIL ERROR] {_e}')
+    if not daily_counter.can_bet(len(san2_bets)):
+        print(f'  [SKIP] 日次上限 {MAX_TOTAL_BETS_PER_DAY} に到達 (現在 {daily_counter.count})')
+        return
+    san_force_dry = DRY_RUN or SAN2_DRY_RUN_ONLY
+    san2_bet_ok = True
+    if not san_force_dry:
+        san_formations = [{'p1_list': [b['P1']], 'p2_list': [b['P2']], 'p3_list': [b['P3']],
+                           'n_combos': 1} for b in san2_bets]
+        r = sess.place_bets_for_race(driver, race_info, tan_bets=[], uma_bets=[],
+                                      san_formations=san_formations,
+                                      stake_yen=STAKE_YEN, stake_yen_san=STAKE_YEN_SAN2)
+        san2_bet_ok = r.get('ok', False)
+    log_path = LOG_DIR / f'L905_bet_log_{date.today():%Y%m%d}.csv'
+    log_exists = log_path.exists()
+    with open(log_path, 'a', encoding='utf-8-sig') as f:
+        if not log_exists:
+            f.write('timestamp,race_id,venue,race_num,kenshu,combo,odds_start,odds_end,change_rate,stake,dry_run,result\\n')
+        for b in san2_bets:
+            combo = f'{b["P1"]}-{b["P2"]}-{b["P3"]}'
+            if san_force_dry:
+                reason = "DRY_RUN" if DRY_RUN else "san2_dry_run_only"
+                print(f'  [DRY-RUN BET] 3連単② {combo} stake={STAKE_YEN_SAN2}円 ({reason})')
+                ok = True
+            else:
+                ok = san2_bet_ok
+                print(f'  [LIVE BET] 3連単② {combo} stake={STAKE_YEN_SAN2}円 ok={ok}')
+            f.write(f'{datetime.now().isoformat(timespec="seconds")},{race_info["race_id"]},'
+                    f'{race_info["venue"]},{race_info["race_num"]},san2,{combo},'
+                    f'{b["odds_start"]},{b["odds_end"]},{b["change_rate"]:.2f},'
+                    f'{STAKE_YEN_SAN2},{san_force_dry},{ok}\\n')
             daily_counter.add()
 """)
 
@@ -568,19 +663,40 @@ code("""
 # ════════════════════════════════════════════════════════════
 # メインループ
 # ════════════════════════════════════════════════════════════
+def _notify_error(context: str, exc: Exception):
+    # エラーをメール通知して検知可能にする (既存メール基盤 send_email_if_configured を利用)
+    import traceback as _tb
+    tb = _tb.format_exc()
+    subj = f'[L905 ERROR] {context}'
+    body = f'{context}\\n\\n{type(exc).__name__}: {exc}\\n\\n{tb}'
+    try:
+        send_email_if_configured(subj, body)
+        print(f'  [MAIL] エラー通知送信: {subj}')
+    except Exception as _e:
+        print(f'  [MAIL ERROR] エラー通知の送信失敗: {_e}')
+    print(f'  [ERROR] {context}: {exc}')
+
+
 def main_loop():
     print(f'=== L905 自動投票監視 開始  {datetime.now():%Y-%m-%d %H:%M:%S} ===')
     print(f'    DRY_RUN={DRY_RUN}  STAKE={STAKE_YEN}円  上限={MAX_TOTAL_BETS_PER_DAY}/day')
 
     processed_race_ids = set()
+    processed_race_ids_san2 = set()   # ① T10発火は別 dedup (T3処理済でもT10で発火可)
     # 起動時、当日分の処理済みレースを log から復元
     log_path = LOG_DIR / f'L905_bet_log_{date.today():%Y%m%d}.csv'
     if log_path.exists():
         try:
             df_log = pd.read_csv(log_path, encoding='utf-8-sig')
-            processed_race_ids.update(df_log['race_id'].astype(str).unique())
+            if 'kenshu' in df_log.columns:
+                _main = df_log[df_log['kenshu'] != 'san2']
+                _s2   = df_log[df_log['kenshu'] == 'san2']
+                processed_race_ids.update(_main['race_id'].astype(str).unique())
+                processed_race_ids_san2.update(_s2['race_id'].astype(str).unique())
+            else:
+                processed_race_ids.update(df_log['race_id'].astype(str).unique())
             daily_counter.count = len(df_log)
-            print(f'    log復元: 処理済み {len(processed_race_ids)} race / 累計投票 {daily_counter.count}')
+            print(f'    log復元: 通常{len(processed_race_ids)}race / ①san2 {len(processed_race_ids_san2)}race / 累計投票 {daily_counter.count}')
         except Exception as e:
             print(f'    [WARN] log復元失敗: {e}')
 
@@ -608,16 +724,39 @@ def main_loop():
                 rid = p.name.split('_')[0]
                 if rid in processed_race_ids:
                     continue
-                race_info = resolve_race_info(rid)
-                signals = compute_signals_for_race(rid)
-                n_tan, n_uma = len(signals['tan_bets']), len(signals['uma_bets'])
-                if n_tan + n_uma == 0:
-                    print(f'[{datetime.now():%H:%M:%S}] {rid} {race_info["venue"]} R{race_info["race_num"]}: シグナルなし')
-                else:
-                    print(f'[{datetime.now():%H:%M:%S}] {rid} {race_info["venue"]} R{race_info["race_num"]}: '
-                          f'シグナル 単勝{n_tan} 馬連{n_uma}')
-                    execute_bets_for_race(sess, driver, race_info, signals)
+                try:
+                    race_info = resolve_race_info(rid)
+                    signals = compute_signals_for_race(rid)
+                    n_tan, n_uma = len(signals['tan_bets']), len(signals['uma_bets'])
+                    if n_tan + n_uma == 0:
+                        print(f'[{datetime.now():%H:%M:%S}] {rid} {race_info["venue"]} R{race_info["race_num"]}: シグナルなし')
+                    else:
+                        print(f'[{datetime.now():%H:%M:%S}] {rid} {race_info["venue"]} R{race_info["race_num"]}: '
+                              f'シグナル 単勝{n_tan} 馬連{n_uma}')
+                        execute_bets_for_race(sess, driver, race_info, signals)
+                except Exception as e:
+                    _notify_error(f'{rid} 通常シグナル処理(T3)', e)
                 processed_race_ids.add(rid)
+
+            # ── ① 第2の3連単シグナル (T30→T10) を SAN2_T_END ファイル出現時に別発火 ──
+            if SAN2_ENABLED:
+                san2_end_files = [p for p in SNAPSHOT_DIR.glob(
+                    f'*_T{SAN2_T_END[1:]}_sanrentan_{today_str}-*.csv')]
+                for p in san2_end_files:
+                    rid = p.name.split('_')[0]
+                    if rid in processed_race_ids_san2:
+                        continue
+                    try:
+                        race_info = resolve_race_info(rid)
+                        s2 = compute_san2_signals_for_race(rid)
+                        n2 = len(s2['san2_bets'])
+                        if n2 > 0:
+                            print(f'[{datetime.now():%H:%M:%S}] {rid} {race_info["venue"]} R{race_info["race_num"]}: '
+                                  f'①3連単 {n2}点 (T10発火)')
+                            execute_san2_bets_for_race(sess, driver, race_info, s2)
+                    except Exception as e:
+                        _notify_error(f'{rid} ①san2処理(T10)', e)
+                    processed_race_ids_san2.add(rid)
 
             time.sleep(POLL_INTERVAL_SEC)
     except KeyboardInterrupt:
@@ -625,6 +764,7 @@ def main_loop():
     except Exception as e:
         print(f'[FATAL] {e}')
         traceback.print_exc()
+        _notify_error('main_loop FATAL (監視ループ停止)', e)
     finally:
         if driver is not None:
             try:

@@ -1,50 +1,63 @@
 {
-  "_comment": "L905 自動投票の設定 (閾値・上限・運用)。本ファイルは git 管理されサブPCへ pull で同期される。認証情報は spat4_credentials.json (gitignored) に分離。",
+  "_comment": "L905 v01 自動投票設定 (T30→T3 / T10→T3 戦略、2026-06-30 復帰)。本ファイルは git 管理されサブPCへ pull で同期される。認証情報は spat4_credentials.json (gitignored) に分離。",
+  "_comment_history": "v02 (T3→T2 急落戦略) を 2026-06-30 に試したが、L931 の ROI は keibaodds の T2 オッズが確定値で上書きされていた artifact と判明 (NAR 19.3% のレースで T2=final 完全一致)。楽天での真の T3→T2 BT は 0 ヒットだったため v01 に復帰。詳細は jra/doc/keibaodds_timing_inconsistency_investigation.md 参照。",
 
   "thresholds": {
-    "_comment": "券種別の T_START → T_END と change_rate (%) 閾値。3連単は T-30 → T-3 が L929 検証で最良。2026-06-27 改善: 単勝 -30→-34 / 3連単 -30→-32。",
+    "_comment": "v01: 馬連 T10→T3, 3連単 T30→T3, 単勝も同様 (現在 max=0 で停止中)",
     "T_START": "T10",
     "T_END": "T3",
-    "tan_change_rate_max": -34.0,
+    "tan_change_rate_max": -30.0,
     "uma_change_rate_max": -30.0,
     "san_T_START": "T30",
     "san_T_END": "T3",
-    "san_change_rate_max": -32.0
+    "san_change_rate_max": -30.0,
+    "_comment_san2": "① 第2の3連単シグナル: T30→T10 を別タイミング(T10)で発火 (2026-07-04 追加, L929 Tx→Ty 探索より)",
+    "san2_T_START": "T30",
+    "san2_T_END": "T10",
+    "san2_change_rate_max": -50.0
   },
 
   "betting": {
-    "_comment_san": "3連単 A 型 試験運用 (2026-06-26 開始, stake_yen_san=50 半額)。L929 集計で PL +1.1M / PL_ex_max +36万 を確認。安定したら 100 円に戻す。",
-    "_comment_filter_2026_06_27": "改善: 単勝下限 2→10 (低オッズ大不調を除外) / 馬連上限 9999→500 (高オッズ 1ヒット依存を抑制)",
-    "stake_yen": 100,
-    "stake_yen_san": 50,
-    "max_bets_per_race_tan": 1,
+    "_comment_tan_disabled": "単勝は L929 検証で回収率 100% 未満確認のため max=0 で停止 (シグナル抽出はするが投票・通知行に含めない)。再開時は 1 に戻す。",
+    "_comment_uma_stake": "馬連 stake 500 円、odds 100-500 で運用 (2026-07-02 変更: 楽天 BT で 20-100 帯は ROI 67-89% と赤字、100-500 で ROI 382%)。20-100 帯除外により件数 490→249 (半減)、日次投資額 25K→12.5K",
+    "_comment_san_narrow": "3連単 max_odds 3000 (L929 検証 E案、件数 -41%, P/L 改善見込み)。フォーメ撤廃 (overshoot 排除)",
+    "stake_yen": 500,
+    "stake_yen_san": 100,
+    "max_bets_per_race_tan": 0,
     "max_bets_per_race_uma": 10,
     "max_bets_per_race_san": 20,
     "max_total_bets_per_day": 1000,
-    "min_odds_tan": 10.0,
+    "min_odds_tan": 2.0,
     "max_odds_tan": 30.0,
-    "min_odds_uma": 20.0,
+    "min_odds_uma": 100.0,
     "max_odds_uma": 500.0,
     "min_odds_san": 2000.0,
-    "max_odds_san": 5000.0,
+    "max_odds_san": 3000.0,
     "san_enabled": true,
-    "san_dry_run_only": true,
-    "_comment_san_dry_run": "san_dry_run_only=true の間は 3連単は DRY-RUN のみ。SPAT4 投票画面の DOM 確認後に false に切替"
+    "san_dry_run_only": false,
+    "san_use_formation": false,
+    "_comment_san2": "① T30→T10 -50%: odds 2000-5000, max30, 100円 (BT: ROI 486%, 的中5, PL_ex_max +107万, 買/R 12.9)。2026-07-04 実弾化 (現行 san も同時に実弾化: san_formations 経由)",
+    "san2_enabled": true,
+    "san2_dry_run_only": false,
+    "min_odds_san2": 2000.0,
+    "max_odds_san2": 5000.0,
+    "max_bets_per_race_san2": 30,
+    "stake_yen_san2": 100
   },
 
   "safety": {
-    "_comment": "試験運用の自動停止条件",
+    "_comment": "試験運用の自動停止条件 (未実装、ログ表示のみ)",
     "daily_loss_stop_yen": -50000,
     "consecutive_loss_days_stop": 3,
     "total_drawdown_stop_yen": -200000
   },
 
   "operation": {
-    "_comment_data_root": "data_root は環境変数 NAR_DATA_ROOT > G:/マイドライブ/... > D:/... > C:/... の順で自動検出。本指定は fallback。",
+    "_comment_data_root": "data_root 自動検出: 環境変数 NAR_DATA_ROOT > D:/workspace/nar/data > G:/マイドライブ/... > C:/... の順",
     "data_root": "D:/workspace/nar/data",
     "poll_interval_sec": 10,
     "log_dir": "logs/",
     "chrome_profile_dir": "C:/Users/ppny9/AppData/Local/spat4_chrome_profile",
-    "_comment_chrome_profile": "Selenium が使う Chrome プロファイルの保存先。同じディレクトリを使い回すことで「次回から表示しない」などの cookie/localStorage 設定が永続化される。"
+    "_comment_chrome_profile": "Selenium が使う Chrome プロファイル"
   }
 }
